@@ -12,14 +12,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Show environment & files
+        run: |
+          uname -a
+          python3 -V || true
+          ls -la
+          echo "---- data dir ----"
+          ls -la data || true
+          echo "---- show gti.json head ----"
+          sed -n '1,80p' data/gti.json || true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Run updater
-        run: python updater.py
+        run: python3 updater.py
+
+      - name: Show diff
+        run: |
+          git status
+          git diff -- data/gti.json || true
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
