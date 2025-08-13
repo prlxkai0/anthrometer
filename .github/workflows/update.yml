@@ -2,22 +2,20 @@ name: Update Daily GTI
 
 on:
   schedule:
-    - cron: "20 2 * * *"   # 02:20 UTC daily
+    - cron: "20 2 * * *"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    permissions: { contents: write }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+        with: { python-version: "3.11" }
 
       - name: Install deps
         run: |
@@ -29,6 +27,9 @@ jobs:
 
       - name: Fetch Global Sentiment
         run: python scripts/fetch_sentiment.py
+
+      - name: Fetch Markets
+        run: python scripts/fetch_markets.py
 
       - name: Update GTI
         run: python scripts/updater.py
