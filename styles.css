@@ -19,3 +19,25 @@ h1{font-size:28px;margin:0 0 4px} .muted{color:var(--muted);font-weight:500}
 .current{display:flex;gap:16px;align-items:center;margin:8px 0 12px}
 .current .label{display:block;color:var(--muted);font-size:12px}
 .current .value{display:block;font-size:22px;font-weight:700}
+
+.card{border:1px solid var(--grid);border-radius:12px;padding:12px;margin:12px 0}
+.grid.two{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:900px){.grid.two{grid-template-columns:1.2fr .8fr}}
+
+.h2{margin:0 0 8px;font-size:18px}
+.table-wrap{overflow:auto;margin-top:8px}
+.table-wrap table{border-collapse:collapse;width:100%;font-size:14px}
+.table-wrap th,.table-wrap td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:left}
+.table-wrap th{color:var(--muted);font-weight:600}
+.bullets{margin:6px 0 0 18px;padding:0}
+
+.current{display:flex;gap:24px;flex-wrap:wrap;margin:8px 0 16px}
+.current .item{background:#f8fafc;border:1px solid var(--grid);border-radius:10px;padding:8px 12px;min-width:140px}
+.current .label{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.current .value{display:block;font-size:26px;font-weight:800;letter-spacing:.2px}
+
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tab{border:1px solid var(--grid);background:#fff;border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
+.tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
