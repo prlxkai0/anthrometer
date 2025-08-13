@@ -35,16 +35,47 @@
   <button class="tab" data-tab="changelog" type="button">Change Log</button>
 </nav>
 
-  <!-- Tab: Overview -->
-  <section id="tab-overview" class="tabpanel active">
-    <section id="chart" class="card"></section>
-  </section>
+<!-- Tab: Overview -->
+<section id="tab-overview" class="tabpanel active">
+  <div class="controls card">
+    <div class="row">
+      <div class="group">
+        <label>Line color</label>
+        <select id="line-color">
+          <option value="auto">Auto</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+          <option value="purple">Purple</option>
+          <option value="orange">Orange</option>
+          <option value="red">Red</option>
+        </select>
+      </div>
+      <div class="group">
+        <label>Line weight</label>
+        <select id="line-weight">
+          <option value="2">Thin</option>
+          <option value="3" selected>Normal</option>
+          <option value="5">Bold</option>
+        </select>
+      </div>
+      <div class="group toggle">
+        <label><input type="checkbox" id="decade-zoom"> Past decade only</label>
+      </div>
+      <div class="group toggle">
+        <label><input type="checkbox" id="dark-mode"> Dark mode</label>
+      </div>
+    </div>
+  </div>
+
+  <section id="chart" class="card"></section>
+
   <div id="year-summary" class="card" style="display:none;">
-  <h2 class="h2">Year Summary</h2>
-  <p><strong id="ys-year">—</strong></p>
-  <p id="ys-hover">—</p>
-  <p id="ys-ai">—</p>
-</div>
+    <h2 class="h2">Year Summary</h2>
+    <p><strong id="ys-year">—</strong></p>
+    <p id="ys-hover">—</p>
+    <p id="ys-ai">—</p>
+  </div>
+</section>
 
   <!-- Tab: Details -->
   <section id="tab-details" class="tabpanel">
