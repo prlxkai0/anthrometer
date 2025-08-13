@@ -41,3 +41,6 @@ h1{font-size:28px;margin:0 0 4px} .muted{color:var(--muted);font-weight:500}
 .tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
 .tabpanel{display:none}
 .tabpanel.active{display:block}
+
+.tab{cursor:pointer; user-select:none}
+.tabs{position:relative; z-index:2} /* keep tabs above any plot overlays */
