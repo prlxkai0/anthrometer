@@ -146,3 +146,10 @@ def append_changelog_entry(date_str, change_str, max_entries=365):
 
 if __name__ == "__main__":
     main()
+   # --- Change Log auto-entry ---
+    date_str = now_iso.split('T')[0]
+    change_str = (
+        f"Planetary={planet_score:.1f}, Sentiment={senti_score:.1f}, Entropy={entropy_live_score:.1f} "
+        f"→ RAW={raw:.1f}, FINAL={final_0_100:.1f}, Δ={clamped_delta if 'clamped_delta' in locals() else (final_0_100-50)*ALPHA:.1f}"
+    )
+    append_changelog_entry(date_str, change_str)
