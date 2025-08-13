@@ -6,6 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const elCY = document.getElementById('current-year');
   const elCV = document.getElementById('current-gti');
 
+  // Simple tabs
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
   async function getJSON(url){
     const r = await fetch(url, {cache:'no-store'});
     if(!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
@@ -17,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const vals  = series.map(d=>d.gti);
 
     // current readout
-    elCY.textContent = years.at(-1);
-    elCV.textContent = Math.round(vals.at(-1));
+    elCY.textContent = years.at(-1) ?? '—';
+    elCV.textContent = (vals.at(-1) != null) ? Math.round(vals.at(-1)) : '—';
 
     const trace = {
       x: years, y: vals, type:'scatter', mode:'lines',
@@ -26,9 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
       line:{width:3}
     };
 
-    const annotations = [1918,1945,2008,2020]
-      .filter(y => years.includes(y))
-      .map(y => ({x:y, y: vals[years.indexOf(y)], text:String(y), showarrow:true, arrowhead:2}));
+    const annYears = [1918,1945,2008,2020].filter(y => years.includes(y));
+    const annotations = annYears.map(y => ({
+      x:y, y: vals[years.indexOf(y)], text:String(y), showarrow:true, arrowhead:2
+    }));
 
     Plotly.newPlot('chart', [trace], {
       margin:{l:60,r:20,t:50,b:40},
@@ -47,10 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const rows = order.map(k => ({
       name:k,
-      score: cats.scores?.[k] ?? 50
+      score: cats?.scores?.[k] ?? 50
     }));
 
-    // mini bar chart using Plotly
     Plotly.newPlot('category-bars', [{
       x: rows.map(r=>r.score),
       y: rows.map(r=>r.name),
@@ -62,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
       xaxis:{range:[0,100], showgrid:true, gridcolor:'#e2e8f0'}
     }, {displayModeBar:false, responsive:true});
 
-    // table
     const tbl = ['<table><thead><tr><th>Category</th><th>Score (0–100)</th></tr></thead><tbody>']
       .concat(rows.map(r=>`<tr><td>${r.name}</td><td>${r.score}</td></tr>`))
       .concat(['</tbody></table>']).join('');
@@ -71,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   (async () => {
     const [gti, cats] = await Promise.all([getJSON(dataUrl), getJSON(catUrl).catch(()=>null)]);
-    if (elUpdated) elUpdated.textContent = new Date(gti.updated).toUTCString();
-    renderLine(gti.series || []);
+    if (elUpdated && gti?.updated) elUpdated.textContent = new Date(gti.updated).toUTCString();
+    renderLine(gti?.series || []);
     if (cats) renderCategories(cats);
   })().catch(err => {
     console.error(err);
