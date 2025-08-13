@@ -67,6 +67,23 @@
     </div>
   </div>
 
+  <div class="group">
+  <label>Quick range</label>
+  <select id="range-select">
+    <option value="all" selected>All (1900–present)</option>
+    <option value="decade">Past decade</option>
+    <option value="20y">Past 20 years</option>
+    <option value="5y">Past 5 years</option>
+  </select>
+</div>
+<div class="group">
+  <label>&nbsp;</label>
+  <div>
+    <button id="btn-png" class="btn">Export PNG</button>
+    <button id="btn-csv" class="btn">Export CSV</button>
+  </div>
+</div>
+
   <section id="chart" class="card"></section>
 
   <div id="year-summary" class="card" style="display:none;">
