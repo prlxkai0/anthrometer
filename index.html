@@ -1,164 +1,156 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AnthroMeter — Good Times Index</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AnthroMeter / Good Times Index</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
-<main class="container">
-  <header>
-    <h1>AnthroMeter <span class="muted">/ Good Times Index</span></h1>
-    <p class="sub">Start=300 • Soft floor=100 • Unbounded • Daily-updating</p>
-    <p class="updated">Last updated: <span id="updated">—</span></p>
-
-    <!-- Clean current readout -->
-    <div id="current" class="current">
-      <div class="item">
-        <span class="label">Current GTI</span>
-        <span id="current-gti" class="value">—</span>
-      </div>
-      <div class="item">
-        <span class="label">Year</span>
-        <span id="current-year" class="value">—</span>
-      </div>
+  <header class="container">
+    <h1>AnthroMeter / Good Times Index</h1>
+    <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
+    <div class="status">
+      <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
+      <span><strong>Year</strong> <span id="current-year">—</span></span>
+      <span><strong>Last updated</strong> <span id="updated">—</span></span>
     </div>
   </header>
 
-  <!-- Tabs -->
-<nav class="tabs">
-  <button class="tab active" data-tab="overview" type="button">Overview</button>
-  <button class="tab" data-tab="details" type="button">Details</button>
-  <button class="tab" data-tab="sources" type="button">Sources & Methodology</button>
-  <button class="tab" data-tab="changelog" type="button">Change Log</button>
-</nav>
+  <main class="container">
+    <!-- Tabs -->
+    <nav class="tabs">
+      <a class="tab active" data-tab="overview">Overview</a>
+      <a class="tab" data-tab="details">Details</a>
+      <a class="tab" data-tab="sources">Sources &amp; Methodology</a>
+      <a class="tab" data-tab="changelog">Change Log</a>
+    </nav>
 
-<!-- Tab: Overview -->
-<section id="tab-overview" class="tabpanel active">
-  <div class="controls card">
-    <div class="row">
-      <div class="group">
-        <label>Line color</label>
-        <select id="line-color">
-          <option value="auto">Auto</option>
-          <option value="blue">Blue</option>
-          <option value="green">Green</option>
-          <option value="purple">Purple</option>
-          <option value="orange">Orange</option>
-          <option value="red">Red</option>
-        </select>
+    <!-- Tab: Overview -->
+    <section id="tab-overview" class="tabpanel active">
+      <div class="controls card">
+        <div class="row">
+          <div class="group">
+            <label>Line color</label>
+            <select id="line-color">
+              <option value="auto">Auto</option>
+              <option value="blue">Blue</option>
+              <option value="green">Green</option>
+              <option value="purple">Purple</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+            </select>
+          </div>
+          <div class="group">
+            <label>Line weight</label>
+            <select id="line-weight">
+              <option value="2">Thin</option>
+              <option value="3" selected>Normal</option>
+              <option value="5">Bold</option>
+            </select>
+          </div>
+          <div class="group">
+            <label>Quick range</label>
+            <select id="range-select">
+              <option value="all" selected>All (1900–present)</option>
+              <option value="decade">Past decade</option>
+              <option value="20y">Past 20 years</option>
+              <option value="5y">Past 5 years</option>
+            </select>
+          </div>
+          <div class="group toggle">
+            <label><input type="checkbox" id="dark-mode"> Dark mode</label>
+          </div>
+          <div class="group">
+            <label>&nbsp;</label>
+            <div>
+              <button id="btn-png" class="btn">Export PNG</button>
+              <button id="btn-csv" class="btn">Export CSV</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="group">
-        <label>Line weight</label>
-        <select id="line-weight">
-          <option value="2">Thin</option>
-          <option value="3" selected>Normal</option>
-          <option value="5">Bold</option>
-        </select>
+
+      <!-- Chart -->
+      <section id="chart" class="card" style="position:relative; padding-bottom:56px"></section>
+
+      <!-- Floating Year Summary -->
+      <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
+        <div class="summary-head">
+          <div>
+            <div class="summary-label">Year</div>
+            <div id="ys-year" class="summary-year">—</div>
+          </div>
+          <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
+        </div>
+        <div class="summary-row">
+          <div class="summary-box">
+            <div class="summary-label">GTI</div>
+            <div id="ys-gti" class="summary-gti">—</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Context</div>
+            <div id="ys-hover" class="summary-text">—</div>
+          </div>
+        </div>
+        <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
       </div>
-      <div class="group toggle">
-        <label><input type="checkbox" id="decade-zoom"> Past decade only</label>
+    </section>
+
+    <!-- Tab: Details -->
+    <section id="tab-details" class="tabpanel">
+      <div class="card" id="details-guide">
+        <h2 class="h2">How to read these categories</h2>
+        <ul class="bullets">
+          <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better). Bars show today’s estimate based on public signals.</li>
+          <li><strong>Weights:</strong> Categories contribute differently to the GTI (e.g., Public Health &amp; Planetary Health currently carry more weight).</li>
+          <li><strong>Modifiers:</strong> <em>Entropy</em> acts as a multiplicative drag (systemic disorder), and <em>Sentiment</em> adds/subtracts points (public mood).</li>
+          <li><strong>Updates:</strong> Some categories use live proxies (RSS/indices); others update less frequently and are smoothed daily.</li>
+          <li><strong>Context ≠ verdict:</strong> A low score flags stress in that dimension, not a final judgment. Click years on the chart to see context.</li>
+        </ul>
       </div>
-      <div class="group toggle">
-        <label><input type="checkbox" id="dark-mode"> Dark mode</label>
+
+      <div class="grid two">
+        <div class="card">
+          <h2 class="h2">Category Breakdown</h2>
+          <div id="category-bars" style="height:380px;"></div>
+        </div>
+        <div class="card">
+          <h2 class="h2">Scores (0–100)</h2>
+          <div id="category-table"></div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="group">
-  <label>Quick range</label>
-  <select id="range-select">
-    <option value="all" selected>All (1900–present)</option>
-    <option value="decade">Past decade</option>
-    <option value="20y">Past 20 years</option>
-    <option value="5y">Past 5 years</option>
-  </select>
-</div>
-<div class="group">
-  <label>&nbsp;</label>
-  <div>
-    <button id="btn-png" class="btn">Export PNG</button>
-    <button id="btn-csv" class="btn">Export CSV</button>
-  </div>
-</div>
+    <!-- Tab: Sources & Methodology -->
+    <section id="tab-sources" class="tabpanel">
+      <div class="grid two">
+        <div class="card">
+          <h2 class="h2">Sources</h2>
+          <div id="sources-list"></div>
+        </div>
+        <div class="card">
+          <h2 class="h2">Methodology</h2>
+          <div id="methodology"></div>
+        </div>
+      </div>
+    </section>
 
-<section id="chart" class="card" style="position:relative; padding-bottom:56px"></section>
+    <!-- Tab: Change Log -->
+    <section id="tab-changelog" class="tabpanel">
+      <div class="card">
+        <h2 class="h2">Change Log</h2>
+        <div id="changelog-list"></div>
+      </div>
+    </section>
+  </main>
 
-<!-- Floating Year Summary (hidden by default) -->
-<div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
-  <div class="summary-head">
-    <div>
-      <div class="summary-label">Year</div>
-      <div id="ys-year" class="summary-year">—</div>
-    </div>
-    <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
-  </div>
-  <div class="summary-row">
-    <div class="summary-box">
-      <div class="summary-label">GTI</div>
-      <div id="ys-gti" class="summary-gti">—</div>
-    </div>
-    <div class="summary-box">
-      <div class="summary-label">Context</div>
-      <div id="ys-hover" class="summary-text">—</div>
-    </div>
-  </div>
-  <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
-</div>
-
-  <!-- Tab: Details -->
-<section id="tab-details" class="tabpanel">
-  <div class="card" id="details-guide">
-    <h2 class="h2">How to read these categories</h2>
-    <ul class="bullets">
-      <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better). Bars show today’s estimate based on public signals.</li>
-      <li><strong>Weights:</strong> Categories contribute differently to the GTI (e.g., Public Health & Planetary Health currently carry more weight).</li>
-      <li><strong>Modifiers:</strong> <em>Entropy</em> acts as a multiplicative drag (systemic disorder), and <em>Sentiment</em> adds/subtracts points (public mood).</li>
-      <li><strong>Updates:</strong> Some categories are fed by live proxies (RSS/indices); others update less frequently and are smoothed daily.</li>
-      <li><strong>Context ≠ verdict:</strong> A low score flags stress in that dimension, not a final judgment. Click years on the chart to see context.</li>
-    </ul>
-  </div>
-
-  <div class="grid two">
-    <div class="card">
-      <h2 class="h2">Category Breakdown</h2>
-      <div id="category-bars" style="height:380px;"></div>
-    </div>
-    <div class="card">
-      <h2 class="h2">Scores (0–100)</h2>
-      <div id="category-table"></div>
-    </div>
-  </div>
-</section>
-
-  <!-- Tab: Sources & Methodology -->
-<section id="tab-sources" class="tabpanel">
-  <div class="grid two">
-    <div class="card">
-      <h2 class="h2">Sources</h2>
-      <div id="sources-list"></div>
-    </div>
-    <div class="card">
-      <h2 class="h2">Methodology</h2>
-      <div id="methodology"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Tab: Change Log -->
-<section id="tab-changelog" class="tabpanel">
-  <div class="card">
-    <h2 class="h2">Change Log</h2>
-    <div id="changelog-list"></div>
-  </div>
-</section>
-
-  <footer>
-    <p class="small">Prototype for private testing. Scores are synthetic for now.</p>
+  <footer class="container muted">
+    <small>© AnthroMeter — Open prototype. This site stores no cookies beyond local display preferences.</small>
   </footer>
-</main>
 
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-<script src="script.js" defer></script>
+  <script src="./script.js"></script>
+</body>
+</html>
