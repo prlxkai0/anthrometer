@@ -4,16 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AnthroMeter / Good Times Index</title>
-  <link rel="stylesheet" href="./styles.css" />
-  <!-- Plotly -->
+  <link rel="stylesheet" href="./styles.css?v=7" />
+  <!-- Plotly (CDN) -->
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
   <header class="container">
-    <h1>AnthroMeter / Good Times Index</h1>
+    <h1>
+      <span style="font-weight:700;">AnthroMeter&nbsp;/</span>
+      <span style="font-weight:400;">&nbsp;Good Times Index</span>
+    </h1>
     <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
 
-    <!-- Old cramped status (kept for safety, hidden in CSS) -->
+    <!-- Legacy status row (hidden in CSS, still populated for safety) -->
     <div class="status">
       <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
       <span><strong>Year</strong> <span id="current-year">—</span></span>
@@ -51,6 +54,7 @@
         </div>
       </div>
 
+      <!-- Controls -->
       <div class="controls card">
         <div class="row">
           <div class="group">
@@ -94,7 +98,7 @@
         </div>
       </div>
 
-      <!-- Chart card with a dedicated inner container for Plotly -->
+      <!-- Chart card with dedicated inner container -->
       <section class="card chart-card">
         <div id="chart-plot"></div>
 
@@ -174,6 +178,6 @@
     <small>© AnthroMeter — Open prototype. This site stores no cookies beyond local display preferences.</small>
   </footer>
 
-  <script src="./script.js"></script>
+  <script src="./script.js?v=7"></script>
 </body>
 </html>
