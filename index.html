@@ -109,43 +109,41 @@
 </div>
 
   <!-- Tab: Details -->
-  <section id="tab-details" class="tabpanel">
-    <div class="card" id="details-guide">
-  <h2 class="h2">How to read these categories</h2>
-  <ul class="bullets">
-    <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better). Bars show today’s estimate based on public signals.</li>
-    <li><strong>Weights:</strong> Categories contribute differently to the GTI (e.g., Public Health & Planetary Health currently carry more weight). See Sources & Methodology for details.</li>
-    <li><strong>Modifiers:</strong> <em>Entropy</em> acts as a multiplicative drag (systemic disorder), and <em>Sentiment</em> adds/subtracts points (public mood).</li>
-    <li><strong>Updates:</strong> Some categories are fed by live proxies (RSS/indices); others update less frequently (e.g., annual datasets) and are smoothed daily.</li>
-    <li><strong>Context ≠ verdict:</strong> A low score flags stress in that dimension, not a final judgment. Click years on the chart to see context summaries.</li>
-  </ul>
-</div>
-    <div class="grid two">
-      <div class="card">
-        <h2 class="h2">Category Breakdown</h2>
-        <div id="category-bars"></div>
-        <div id="category-table" class="table-wrap"></div>
-      </div>
-      <div class="card">
-        <h2 class="h2">Method Snapshot</h2>
-        <ul class="bullets">
-          <li>Weighted hybrid model (planet + people)</li>
-          <li>Entropy = drag · Sentiment = boost</li>
-          <li>Category scores 0–100; index line unbounded (floor=100)</li>
-        </ul>
-      </div>
+<section id="tab-details" class="tabpanel">
+  <div class="card" id="details-guide">
+    <h2 class="h2">How to read these categories</h2>
+    <ul class="bullets">
+      <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better). Bars show today’s estimate based on public signals.</li>
+      <li><strong>Weights:</strong> Categories contribute differently to the GTI (e.g., Public Health & Planetary Health currently carry more weight).</li>
+      <li><strong>Modifiers:</strong> <em>Entropy</em> acts as a multiplicative drag (systemic disorder), and <em>Sentiment</em> adds/subtracts points (public mood).</li>
+      <li><strong>Updates:</strong> Some categories are fed by live proxies (RSS/indices); others update less frequently and are smoothed daily.</li>
+      <li><strong>Context ≠ verdict:</strong> A low score flags stress in that dimension, not a final judgment. Click years on the chart to see context.</li>
+    </ul>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <h2 class="h2">Category Breakdown</h2>
+      <div id="category-bars" style="height:380px;"></div>
     </div>
-  </section>
+    <div class="card">
+      <h2 class="h2">Scores (0–100)</h2>
+      <div id="category-table"></div>
+    </div>
+  </div>
+</section>
 
   <!-- Tab: Sources & Methodology -->
 <section id="tab-sources" class="tabpanel">
-  <div class="card">
-    <h2 class="h2">Sources</h2>
-    <div id="sources-list" class="table-wrap"></div>
-  </div>
-  <div class="card">
-    <h2 class="h2">Methodology</h2>
-    <div id="methodology"></div>
+  <div class="grid two">
+    <div class="card">
+      <h2 class="h2">Sources</h2>
+      <div id="sources-list"></div>
+    </div>
+    <div class="card">
+      <h2 class="h2">Methodology</h2>
+      <div id="methodology"></div>
+    </div>
   </div>
 </section>
 
@@ -153,7 +151,7 @@
 <section id="tab-changelog" class="tabpanel">
   <div class="card">
     <h2 class="h2">Change Log</h2>
-    <div id="changelog-list" class="table-wrap"></div>
+    <div id="changelog-list"></div>
   </div>
 </section>
 
