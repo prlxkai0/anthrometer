@@ -31,6 +31,8 @@
 <nav class="tabs">
   <button class="tab active" data-tab="overview" type="button">Overview</button>
   <button class="tab" data-tab="details" type="button">Details</button>
+  <button class="tab" data-tab="sources" type="button">Sources & Methodology</button>
+  <button class="tab" data-tab="changelog" type="button">Change Log</button>
 </nav>
 
   <!-- Tab: Overview -->
@@ -56,6 +58,26 @@
       </div>
     </div>
   </section>
+
+  <!-- Tab: Sources & Methodology -->
+<section id="tab-sources" class="tabpanel">
+  <div class="card">
+    <h2 class="h2">Sources</h2>
+    <div id="sources-list" class="table-wrap"></div>
+  </div>
+  <div class="card">
+    <h2 class="h2">Methodology</h2>
+    <div id="methodology"></div>
+  </div>
+</section>
+
+<!-- Tab: Change Log -->
+<section id="tab-changelog" class="tabpanel">
+  <div class="card">
+    <h2 class="h2">Change Log</h2>
+    <div id="changelog-list" class="table-wrap"></div>
+  </div>
+</section>
 
   <footer>
     <p class="small">Prototype for private testing. Scores are synthetic for now.</p>
