@@ -49,6 +49,11 @@ h1{margin:6px 0 2px 0; font-size:26px}
 .kpi-value{font-size:28px; font-weight:800; letter-spacing:.2px}
 .kpi-sub{font-size:14px; color:var(--fg)}
 
+/* Chart card */
+.chart-card{position:relative; padding-bottom:56px}
+#chart-plot{height:520px; width:100%}
+@media (max-width:720px){ #chart-plot{height:420px} }
+
 /* Floating Year Summary */
 .summary-card{
   position:absolute; right:16px; bottom:16px; max-width:420px;
