@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # updater.py — computes GTI daily using live stubs for Planetary, Sentiment, and Entropy.
-# Includes a gentle daily change clamp to avoid jumpy moves.
+# Includes (1) daily change clamp and (2) exponential smoothing toward today's target.
 
 import json, os, datetime
 
@@ -9,7 +9,8 @@ MIN_FLOOR       = 100.0   # Non-zero floor so the index never touches 0
 ALPHA           = 4.0     # Sensitivity: index delta per (final_0_100 - 50)
 BETA            = 0.20    # Entropy drag (0..20% multiplicative)
 GAMMA           = 1.5     # Sentiment additive boost per pt above/below 50
-MAX_DAILY_MOVE  = 25.0    # <-- clamp absolute daily index move to ± this many points
+MAX_DAILY_MOVE  = 25.0    # Clamp absolute daily index move to ± this many points
+SMOOTHING       = 0.60    # <-- Exponential smoothing toward today's target (0.3 = calm, 0.8 = snappy)
 DATA_DIR        = os.path.join(os.path.dirname(__file__), 'data')
 
 WEIGHTS = {
@@ -42,7 +43,6 @@ def clamp_0_100(v):
     return 0 if v < 0 else (100 if v > 100 else v)
 
 def clamp_abs(v, cap):
-    """Clamp v to ±cap."""
     if v > cap: return cap
     if v < -cap: return -cap
     return v
@@ -75,40 +75,38 @@ def main():
     except Exception:
         cat_blob = {"updated": "", "scores": {}, "modifiers": {}}
 
-    scores = dict(cat_blob.get('scores', {}))     # copy to be safe
+    scores = dict(cat_blob.get('scores', {}))
     mods   = dict(cat_blob.get('modifiers', {}))
 
     # --- Live stubs (0–100) ---
-    # Ensure these files exist at repo root:
-    #   planetary_live.py, sentiment_live.py, entropy_live.py
     import planetary_live, sentiment_live, entropy_live
-
     planet_score       = float(planetary_live.get_score())
     senti_score        = float(sentiment_live.get_score())
     entropy_live_score = float(entropy_live.get_score())
 
-    # --- Merge live scores into categories ---
+    # --- Merge into categories ---
     scores["Planetary Health"]    = planet_score
     scores["Sentiment & Culture"] = senti_score
     scores["Entropy Index"]       = entropy_live_score
 
-    # --- Modifiers (use live entropy by default; sentiment modifier defaults to senti_score) ---
+    # --- Modifiers (prefer live entropy; sentiment mod defaults to sentiment score) ---
     entropy_mod   = float(mods.get("entropy", entropy_live_score))
     sentiment_mod = float(mods.get("sentiment", senti_score))
 
-    # --- Compute GTI in 0–100 space, then stock-style delta ---
-    raw = compute_weighted_raw(scores)                 # weighted composite (0–100)
+    # --- Compute GTI in 0–100, then delta ---
+    raw = compute_weighted_raw(scores)
     final_0_100 = apply_modifiers(raw, entropy_mod, sentiment_mod)
 
-    # Proposed delta before clamps
     proposed_delta = (final_0_100 - 50.0) * ALPHA
+    clamped_delta  = clamp_abs(proposed_delta, MAX_DAILY_MOVE)
 
-    # Clamp the *daily index move* (gentle changes)
-    clamped_delta = clamp_abs(proposed_delta, MAX_DAILY_MOVE)
+    last_val   = float(series[-1]['gti'])
+    target_val = clamp_floor(last_val + clamped_delta, MIN_FLOOR)
 
-    last_val = float(series[-1]['gti'])
-    next_val = clamp_floor(last_val + clamped_delta, MIN_FLOOR)
-    series[-1]['gti'] = round(next_val, 2)
+    # Exponential smoothing toward today's target
+    smoothed_next = last_val + SMOOTHING * (target_val - last_val)
+    smoothed_next = clamp_floor(smoothed_next, MIN_FLOOR)
+    series[-1]['gti'] = round(smoothed_next, 2)
 
     # --- Persist categories & GTI ---
     now_iso = datetime.datetime.utcnow().isoformat() + 'Z'
@@ -122,8 +120,9 @@ def main():
 
     print(
         f"Planetary={planet_score:.2f}  Sentiment={senti_score:.2f}  Entropy={entropy_live_score:.2f} | "
-        f"RAW={raw:.2f}  FINAL={final_0_100:.2f}  Δ_proposed={proposed_delta:.2f}  Δ_clamped={clamped_delta:.2f} "
-        f"→ GTI={next_val:.2f} (floor {MIN_FLOOR}, cap ±{MAX_DAILY_MOVE})"
+        f"RAW={raw:.2f}  FINAL={final_0_100:.2f}  Δ_prop={proposed_delta:.2f}  Δ_clamp={clamped_delta:.2f}  "
+        f"Target={target_val:.2f}  Smoothed={smoothed_next:.2f} "
+        f"(floor {MIN_FLOOR}, cap ±{MAX_DAILY_MOVE}, smoothing {SMOOTHING})"
     )
 
 if __name__ == "__main__":
