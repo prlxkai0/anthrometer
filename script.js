@@ -1,4 +1,4 @@
-// script.js — AnthroMeter front-end (KPI card + cleaner change log + floating Year Summary autohide)
+// script.js — AnthroMeter front-end (stable sizing + KPI card + floating summary autohide)
 document.addEventListener('DOMContentLoaded', () => {
   // --------- Endpoints (cache-busted) ----------
   const bust = Date.now();
@@ -10,26 +10,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const sumUrl    = `./data/summaries.json?t=${bust}`;
 
   // --------- DOM refs ----------
-  // (Old header status — still set for safety but hidden via CSS)
+  // Legacy header status (hidden via CSS, still set)
   const elUpdated = document.getElementById('updated');
   const elCY = document.getElementById('current-year');
   const elCV = document.getElementById('current-gti');
 
-  // KPI card (Overview)
+  // KPI card
   const kpiYear = document.getElementById('kpi-year');
   const kpiGTI  = document.getElementById('kpi-gti');
   const kpiUpd  = document.getElementById('kpi-updated');
 
-  // Controls (Overview tab)
+  // Controls
   const selColor  = document.getElementById('line-color');
   const selWeight = document.getElementById('line-weight');
-  const chkDecade = document.getElementById('decade-zoom'); // legacy checkbox (optional)
+  const chkDecade = document.getElementById('decade-zoom'); // optional legacy
   const chkDark   = document.getElementById('dark-mode');
   const selRange  = document.getElementById('range-select');
   const btnPNG    = document.getElementById('btn-png');
   const btnCSV    = document.getElementById('btn-csv');
 
-  // Floating Year Summary elements
+  // Floating Year Summary
   const ys = {
     panel: document.getElementById('year-summary'),
     close: document.getElementById('ys-close'),
@@ -43,14 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!ys.panel) return;
     ys.panel.style.display = 'block';
     if (ysTimer) clearTimeout(ysTimer);
-    ysTimer = setTimeout(() => { ys.panel.style.display = 'none'; }, 10000); // auto-hide after 10s
+    ysTimer = setTimeout(() => { ys.panel.style.display = 'none'; }, 10000);
   }
 
-  // --------- Preferences (persist) ----------
+  // --------- Preferences ----------
   const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
   function savePrefs(){ localStorage.setItem('prefs', JSON.stringify(prefs)); }
-
-  // Dark mode: if user never chose, respect system
   if (typeof prefs.darkMode === 'undefined') {
     const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
     prefs.darkMode = mq ? mq.matches : false;
@@ -67,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.tabpanel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       target.classList.add('active');
+      // Relayout chart when returning to Overview
+      if (btn.dataset.tab === 'overview' && window.Plotly && document.getElementById('chart-plot')) {
+        try { Plotly.Plots.resize('chart-plot'); } catch(e){}
+      }
     }, { passive: true });
   });
 
@@ -79,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
   function safePlotlyNewPlot(id, data, layout, config){
     const el = document.getElementById(id);
-    if (!el) return; // silently skip if container missing
+    if (!el) return;
     try { Plotly.newPlot(id, data, layout, config); } catch(e){ console.error('Plotly error for', id, e); }
   }
 
@@ -88,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let EVENTS = {};
   let SUMMARIES = {};
   let CATS = null;
+  const CHART_ID = 'chart-plot';
 
   // --------- Plotting ----------
   function computeRange(years){
@@ -97,16 +100,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pick === 'decade') return [maxYear - 9, maxYear];
     if (pick === '20y')    return [maxYear - 19, maxYear];
     if (pick === '5y')     return [maxYear - 4,  maxYear];
-    return undefined; // all time
+    return undefined;
   }
 
   function plotLine(){
-    const c = document.getElementById('chart');
+    const el = document.getElementById(CHART_ID);
+    if (!el) return;
+
     if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length === 0) {
-      if (c) c.innerHTML = '<div style="padding:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">No GTI data found.</div>';
+      el.innerHTML = '<div style="padding:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">No GTI data found.</div>';
       return;
-    } else if (c) {
-      c.innerHTML = ''; // clear fallback
+    } else {
+      el.innerHTML = '';
     }
 
     const years = GTI_SERIES.map(d => d.year);
@@ -115,25 +120,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastYear = years[lastIdx];
     const lastVal = vals[lastIdx];
 
-    // Update header (hidden) and KPI card (visible)
+    // Update header (hidden) and KPI
     if (elCY) elCY.textContent = lastYear != null ? lastYear : '—';
     if (elCV) elCV.textContent = lastVal  != null ? Math.round(lastVal) : '—';
     if (kpiYear) kpiYear.textContent = elCY.textContent;
     if (kpiGTI)  kpiGTI.textContent  = elCV.textContent;
 
-    // styling
+    // Styling
     const colorMap = { blue:'#2563eb', green:'#059669', purple:'#7c3aed', orange:'#ea580c', red:'#dc2626' };
     const useColor = (prefs.lineColor && prefs.lineColor !== 'auto') ? colorMap[prefs.lineColor] : undefined;
     const useWidth = Number(prefs.lineWeight || 3);
 
-    // annotations
+    // Annotations
     const annoLabels = { 1918:'1918: Flu Pandemic', 1945:'1945: WWII Ends', 2008:'2008: Financial Crisis', 2020:'2020: COVID-19' };
     const annotations = Object.keys(annoLabels)
       .map(k => parseInt(k, 10))
-      .filter(y => years.indexOf(y) !== -1)
+      .filter(y => years.includes(y))
       .map(y => ({ x:y, y: vals[years.indexOf(y)], text: annoLabels[y], showarrow:true, arrowhead:2, ax:0, ay:-40 }));
 
-    // range + decade highlight
+    // Range + optional decade highlight
     const xr = computeRange(years);
     const shapes = (!xr) ? [{
       type:'rect', xref:'x', yref:'paper',
@@ -143,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       line:{ width:0 }
     }] : [];
 
-    Plotly.newPlot('chart', [{
+    Plotly.newPlot(CHART_ID, [{
       x: years,
       y: vals,
       type: 'scatter',
@@ -196,8 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCategories(cats){
     if (!cats) return;
     CATS = cats;
-
-    // also mirror KPI updated time here if present
     if (kpiUpd && cats.updated) kpiUpd.textContent = new Date(cats.updated).toUTCString();
 
     const order = [
@@ -257,12 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
     listEl.innerHTML = `<ul>${rows}</ul>`;
   }
 
-  // --------- Bind controls & init values ----------
+  // --------- Init control values ----------
   if (selColor)  selColor.value  = prefs.lineColor  || 'auto';
   if (selWeight) selWeight.value = String(prefs.lineWeight || 3);
   if (chkDark)   chkDark.checked = !!prefs.darkMode;
   if (selRange)  selRange.value  = prefs.range || 'all';
-  if (chkDecade) chkDecade.checked = (prefs.range === 'decade'); // legacy sync
+  if (chkDecade) chkDecade.checked = (prefs.range === 'decade');
 
   function replot(){ plotLine(); }
 
@@ -278,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Export
   btnPNG && btnPNG.addEventListener('click', async () => {
-    try { await Plotly.downloadImage('chart', { format:'png', filename:'anthrometer-gti' }); }
+    try { await Plotly.downloadImage('chart-plot', { format:'png', filename:'anthrometer-gti' }); }
     catch(e){ console.error(e); }
   });
   btnCSV && btnCSV.addEventListener('click', () => {
@@ -297,6 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ys.panel.style.display = 'none';
       if (ysTimer) clearTimeout(ysTimer);
     }
+  });
+
+  // Window resize → keep chart responsive
+  window.addEventListener('resize', () => {
+    if (window.Plotly) { try { Plotly.Plots.resize('chart-plot'); } catch(e){} }
   });
 
   // --------- Load & render everything ----------
@@ -328,8 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChangelog(cl);
   })().catch(err => {
     console.error(err);
-    const c = document.getElementById('chart');
-    if (c) c.innerHTML = `<div style="padding:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;">
+    const el = document.getElementById(CHART_ID);
+    if (el) el.innerHTML = `<div style="padding:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;">
       Failed to load data: ${String(err)}
     </div>`;
   });
