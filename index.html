@@ -13,7 +13,7 @@
     <h1>AnthroMeter / Good Times Index</h1>
     <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
 
-    <!-- Old cramped status (hidden via CSS) -->
+    <!-- Old cramped status (kept for safety, hidden in CSS) -->
     <div class="status">
       <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
       <span><strong>Year</strong> <span id="current-year">—</span></span>
@@ -94,30 +94,32 @@
         </div>
       </div>
 
-      <!-- Chart -->
-      <section id="chart" class="card" style="position:relative; padding-bottom:56px"></section>
+      <!-- Chart card with a dedicated inner container for Plotly -->
+      <section class="card chart-card">
+        <div id="chart-plot"></div>
 
-      <!-- Floating Year Summary -->
-      <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
-        <div class="summary-head">
-          <div>
-            <div class="summary-label">Year</div>
-            <div id="ys-year" class="summary-year">—</div>
+        <!-- Floating Year Summary -->
+        <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
+          <div class="summary-head">
+            <div>
+              <div class="summary-label">Year</div>
+              <div id="ys-year" class="summary-year">—</div>
+            </div>
+            <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
           </div>
-          <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
+          <div class="summary-row">
+            <div class="summary-box">
+              <div class="summary-label">GTI</div>
+              <div id="ys-gti" class="summary-gti">—</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-label">Context</div>
+              <div id="ys-hover" class="summary-text">—</div>
+            </div>
+          </div>
+          <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
         </div>
-        <div class="summary-row">
-          <div class="summary-box">
-            <div class="summary-label">GTI</div>
-            <div id="ys-gti" class="summary-gti">—</div>
-          </div>
-          <div class="summary-box">
-            <div class="summary-label">Context</div>
-            <div id="ys-hover" class="summary-text">—</div>
-          </div>
-        </div>
-        <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
-      </div>
+      </section>
     </section>
 
     <!-- Tab: Details -->
