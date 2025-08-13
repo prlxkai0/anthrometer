@@ -1,0 +1,22 @@
+{
+  "Planetary Health": {
+    "co2_ppm": { "source": "NOAA Mauna Loa", "map": "280->100 linear to 500->0", "clamp": [0, 100] }
+  },
+  "Economic Wellbeing": {
+    "inflation_yoy":   { "source": "World Bank WLD FP.CPI.TOTL.ZG", "map": "2%~100; 20%~10; deflation mild penalty" },
+    "unemployment":    { "source": "World Bank WLD SL.UEM.TOTL.ZS", "map": "3%~95; 25%~15 linear" },
+    "gdp_pc_growth":   { "source": "World Bank WLD NY.GDP.PCAP.KD.ZG", "map": "-10%~10; 0%~55; 4%~90; 6%~95" }
+  },
+  "Public Health": {
+    "who_outbreak_rss": { "source": "WHO DON RSS", "map": "severity tokens per headline inverted to 0–100" }
+  },
+  "Global Peace & Conflict": {
+    "news_conflict_rss": { "source": "NYT/BBC/AJ RSS", "map": "violence tokens per headline inverted to 0–100" }
+  },
+  "Sentiment & Culture": {
+    "news_sentiment": { "source": "BBC/AJ RSS lexicon", "map": "headline sentiment to 0–100 (50 neutral)" }
+  },
+  "Entropy Index": {
+    "risk_density": { "source": "Global RSS mix", "map": "risk/chaos tokens → 0–100 (higher worse)" }
+  }
+}
