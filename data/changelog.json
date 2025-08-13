@@ -1,12 +1,6 @@
 {
-  "methodology": [
-    "Weighted hybrid model across 8 categories (planet + people).",
-    "Category scores normalized to 0–100; GTI index is unbounded (soft floor).",
-    "Entropy acts as multiplicative drag; Sentiment as additive boost.",
-    "Daily updates precompute values via GitHub Actions; site remains static."
-  ],
-  "sources": [
-    { "category": "Planetary Health", "name": "Climate datasets & emissions inventories", "link": "#", "notes": "Live feed coming soon." },
-    { "category": "Sentiment & Culture", "name": "Global headlines sentiment (NLP)", "link": "#", "notes": "Live pilot planned." }
+  "entries": [
+    { "date": "2025-08-13", "change": "Initial public prototype, daily updater online." },
+    { "date": "2025-08-14", "change": "Tabs added: Details, Sources & Methodology, Change Log. Hover/click interactions scaffolded." }
   ]
 }
