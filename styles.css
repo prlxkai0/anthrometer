@@ -63,3 +63,7 @@ body { background:var(--bg); color:var(--fg); }
 .controls .toggle label{display:flex; align-items:center; gap:8px; font-weight:600; color:var(--fg)}
 .tab{cursor:pointer; user-select:none}
 .tabs{position:relative; z-index:2}
+
+.btn{border:1px solid var(--grid); background:var(--bg); color:var(--fg);
+     border-radius:10px; padding:6px 10px; cursor:pointer; font-weight:600; margin-right:6px}
+.btn:hover{filter:brightness(0.95)}
