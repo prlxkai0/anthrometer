@@ -1,12 +1,13 @@
 {
   "methodology": [
-    "Weighted hybrid model across 8 categories (planet + people).",
-    "Category scores normalized to 0–100; GTI index is unbounded (soft floor).",
-    "Entropy acts as multiplicative drag; Sentiment as additive boost.",
-    "Daily updates precompute values via GitHub Actions; site remains static."
+    "Weighted hybrid model across 8 categories.",
+    "0–100 category scores; GTI index is unbounded (soft floor).",
+    "Entropy = multiplicative drag; Sentiment = additive boost.",
+    "Daily updates via GitHub Actions; site is static for privacy/cost."
   ],
   "sources": [
-    { "category": "Planetary Health", "name": "Climate datasets & emissions inventories", "link": "#", "notes": "Live feed coming soon." },
-    { "category": "Sentiment & Culture", "name": "Global headlines sentiment (NLP)", "link": "#", "notes": "Live pilot planned." }
+    { "category": "Planetary Health", "name": "NOAA Mauna Loa CO₂", "link": "https://gml.noaa.gov/ccgg/trends/", "notes": "Used to derive a simple health proxy." },
+    { "category": "Sentiment & Culture", "name": "BBC & Al Jazeera RSS", "link": "https://www.bbc.co.uk/news/10628494", "notes": "Headlines sentiment (lexicon-based stub)." },
+    { "category": "Entropy Index", "name": "BBC/NYT/Al Jazeera RSS", "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "notes": "Risk/chaos token density." }
   ]
 }
