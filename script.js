@@ -1,4 +1,4 @@
-// script.js — AnthroMeter front-end
+// script.js — AnthroMeter front-end (clean with floating Year Summary)
 document.addEventListener('DOMContentLoaded', () => {
   // --------- Endpoints (cache-busted) ----------
   const bust = Date.now();
@@ -17,11 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Controls (Overview tab)
   const selColor  = document.getElementById('line-color');
   const selWeight = document.getElementById('line-weight');
-  const chkDecade = document.getElementById('decade-zoom'); // legacy checkbox
+  const chkDecade = document.getElementById('decade-zoom'); // legacy checkbox (optional)
   const chkDark   = document.getElementById('dark-mode');
   const selRange  = document.getElementById('range-select');
   const btnPNG    = document.getElementById('btn-png');
   const btnCSV    = document.getElementById('btn-csv');
+
+  // Floating Year Summary elements
+  const ys = {
+    panel: document.getElementById('year-summary'),
+    close: document.getElementById('ys-close'),
+    year:  document.getElementById('ys-year'),
+    gti:   document.getElementById('ys-gti'),
+    hover: document.getElementById('ys-hover'),
+    ai:    document.getElementById('ys-ai')
+  };
 
   // --------- Preferences (persist) ----------
   const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
@@ -59,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let GTI_SERIES = [];
   let EVENTS = {};
   let SUMMARIES = {};
-  let CATS = null; // categories blob
+  let CATS = null;
 
   // --------- Plotting ----------
   function computeRange(years){
@@ -132,22 +142,36 @@ document.addEventListener('DOMContentLoaded', () => {
       gd.on('plotly_hover', ev => {
         const year = ev?.points?.[0]?.x;
         if (!year) return;
+        // Prefill hover text inside summary (hidden until click)
         const hover = EVENTS[String(year)];
-        if (hover) {
-          document.getElementById('ys-year').textContent = String(year);
-          document.getElementById('ys-hover').textContent = hover;
+        if (hover && ys.hover) {
+          ys.year && (ys.year.textContent = String(year));
+          ys.hover.textContent = hover;
         }
       });
+
       gd.on('plotly_click', ev => {
         const year = ev?.points?.[0]?.x;
         if (!year) return;
-        const hover = EVENTS[String(year)] || '—';
-        const ai = SUMMARIES[String(year)] || 'Summary coming soon.';
-        document.getElementById('ys-year').textContent = String(year);
-        document.getElementById('ys-hover').textContent = hover;
-        document.getElementById('ys-ai').textContent = ai;
-        const panel = document.getElementById('year-summary');
-        if (panel) panel.style.display = 'block';
+
+        // GTI value for that year
+        let gtiVal = '—';
+        for (let i=0;i<GTI_SERIES.length;i++){
+          if (GTI_SERIES[i].year === year) {
+            const n = GTI_SERIES[i].gti;
+            gtiVal = (typeof n === 'number') ? Math.round(n) : '—';
+            break;
+          }
+        }
+
+        // Fill floating card
+        ys.year  && (ys.year.textContent = String(year));
+        ys.gti   && (ys.gti.textContent  = gtiVal);
+        ys.hover && (ys.hover.textContent= EVENTS[String(year)] || '—');
+        ys.ai    && (ys.ai.textContent   = SUMMARIES[String(year)] || 'Summary coming soon.');
+
+        // Show
+        if (ys.panel) ys.panel.style.display = 'block';
       });
     });
   }
@@ -182,30 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Table
     const cells = rows.map(r => `<tr><td>${r.name}</td><td>${r.score}</td></tr>`).join('');
-    document.getElementById('category-table').innerHTML =
-      `<table><thead><tr><th>Category</th><th>Score (0–100)</th></tr></thead><tbody>${cells}</tbody></table>`;
-
-    // Inline legend (compact) under the chart
-    renderLegend(cats);
-  }
-
-  function renderLegend(cats){
-    const el = document.getElementById('year-summary'); // reuse this card's bottom area
-    if (!el || !cats || !cats.scores) return;
-    const order = [
-      "Planetary Health","Economic Wellbeing","Global Peace & Conflict",
-      "Public Health","Civic Freedom & Rights","Technological Progress",
-      "Sentiment & Culture","Entropy Index"
-    ];
-    const items = order.map(k => {
-      const v = (typeof cats.scores[k] === 'number') ? Math.round(cats.scores[k]) : '—';
-      return `<li style="display:inline-block;margin:4px 10px 0 0;color:var(--muted)">${k}: <strong style="color:var(--fg)">${v}</strong></li>`;
-    }).join('');
-    const legend = `<ul style="list-style:none;padding:0;margin:8px 0 0">${items}</ul>`;
-    let div = document.getElementById('legend-inline');
-    if (!div) { div = document.createElement('div'); div.id = 'legend-inline'; el.appendChild(div); }
-    div.innerHTML = legend;
-    el.style.display = 'block';
+    const tbl = document.getElementById('category-table');
+    if (tbl) {
+      tbl.innerHTML = `<table><thead><tr><th>Category</th><th>Score (0–100)</th></tr></thead><tbody>${cells}</tbody></table>`;
+    }
   }
 
   function renderSources(src){
@@ -215,13 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = (src.sources || []).map(s =>
       `<tr><td>${s.category}</td><td><a href="${s.link}" target="_blank" rel="noopener">${s.name}</a></td><td>${s.notes || ''}</td></tr>`
     ).join('');
-    listEl.innerHTML = `<table><thead><tr><th>Category</th><th>Source</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`;
-    methEl.innerHTML = `<ul class="bullets">${(src.methodology || []).map(m => `<li>${m}</li>`).join('')}</ul>`;
+    if (listEl) listEl.innerHTML = `<table><thead><tr><th>Category</th><th>Source</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`;
+    if (methEl) methEl.innerHTML = `<ul class="bullets">${(src.methodology || []).map(m => `<li>${m}</li>`).join('')}</ul>`;
   }
 
   function renderChangelog(cl){
     const listEl = document.getElementById('changelog-list');
-    if (!cl) return;
+    if (!cl || !listEl) return;
     const rows = (cl.entries || []).map(e => `<tr><td>${e.date}</td><td>${e.change}</td></tr>`).join('');
     listEl.innerHTML = `<table><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
@@ -259,6 +263,14 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 
+  // Summary close handlers
+  ys.close && ys.close.addEventListener('click', () => { ys.panel && (ys.panel.style.display = 'none'); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ys.panel && ys.panel.style.display !== 'none') {
+      ys.panel.style.display = 'none';
+    }
+  });
+
   // --------- Load & render everything ----------
   (async () => {
     const [gti, cats, src, cl, evMap, smap] = await Promise.all([
@@ -274,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     GTI_SERIES = (gti && gti.series) ? gti.series : [];
     EVENTS     = evMap || {};
     SUMMARIES  = smap || {};
+    CATS       = cats || null;
 
     plotLine();
     renderCategories(cats);
