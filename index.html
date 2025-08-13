@@ -12,6 +12,8 @@
   <header class="container">
     <h1>AnthroMeter / Good Times Index</h1>
     <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
+
+    <!-- Old cramped status (hidden via CSS) -->
     <div class="status">
       <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
       <span><strong>Year</strong> <span id="current-year">—</span></span>
@@ -30,6 +32,25 @@
 
     <!-- Tab: Overview -->
     <section id="tab-overview" class="tabpanel active">
+
+      <!-- KPI card -->
+      <div class="kpi card" id="kpi">
+        <div class="kpi-row">
+          <div class="kpi-item">
+            <div class="kpi-label">Current GTI</div>
+            <div class="kpi-value" id="kpi-gti">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">Year</div>
+            <div class="kpi-value" id="kpi-year">—</div>
+          </div>
+          <div class="kpi-item wide">
+            <div class="kpi-label">Last updated</div>
+            <div class="kpi-sub" id="kpi-updated">—</div>
+          </div>
+        </div>
+      </div>
+
       <div class="controls card">
         <div class="row">
           <div class="group">
