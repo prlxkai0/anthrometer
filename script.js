@@ -12,15 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const selColor  = document.getElementById('line-color');
   const selWeight = document.getElementById('line-weight');
-  const chkDecade = document.getElementById('decade-zoom'); // kept for backward compat
+  const chkDecade = document.getElementById('decade-zoom');
   const chkDark   = document.getElementById('dark-mode');
   const selRange  = document.getElementById('range-select');
   const btnPNG    = document.getElementById('btn-png');
   const btnCSV    = document.getElementById('btn-csv');
 
+  // Preferences
   const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
   function savePrefs(){ localStorage.setItem('prefs', JSON.stringify(prefs)); }
-  if (prefs.darkMode === true) document.body.classList.add('dark');
+
+  // Dark mode: if no saved pref, respect system
+  if (typeof prefs.darkMode === 'undefined') {
+    const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    prefs.darkMode = mq ? mq.matches : false;
+  }
+  document.body.classList.toggle('dark', !!prefs.darkMode);
 
   // Tabs
   document.querySelectorAll('.tab').forEach(btn => {
