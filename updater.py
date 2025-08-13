@@ -1,46 +1,94 @@
 #!/usr/bin/env python3
-import json, os, random, datetime
+import json, os, datetime
 
-# ---- CONFIG ----
-MIN_FLOOR = 100.0   # soft floor for the GTI index (adjust as you like)
-NUDGE_RANGE = (-3.0, 3.0)  # daily drift (placeholder until real scoring)
+# ================= CONFIG =================
+MIN_FLOOR = 100.0   # Non-zero floor so the chart never touches 0
+ALPHA     = 4.0     # Sensitivity: how much the index moves per point from 50
+BETA      = 0.20    # Entropy sensitivity (0.20 = up to 20% drag at entropy=100)
+GAMMA     = 1.5     # Sentiment additive boost per point above/below 50
+DATA_DIR  = os.path.join(os.path.dirname(__file__), 'data')
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'gti.json')
+WEIGHTS = {
+    "Planetary Health":         0.18,
+    "Economic Wellbeing":       0.12,
+    "Global Peace & Conflict":  0.12,
+    "Public Health":            0.18,
+    "Civic Freedom & Rights":   0.12,
+    "Technological Progress":   0.08,
+    "Sentiment & Culture":      0.10,
+    "Entropy Index":            0.10
+}
 
-def clamp_floor(value: float, floor: float) -> float:
-    """Never let the GTI fall below the configured floor."""
-    return value if value >= floor else floor
+GTI_PATH        = os.path.join(DATA_DIR, 'gti.json')
+CATEGORIES_PATH = os.path.join(DATA_DIR, 'categories.json')
+# ===========================================
 
-def load_series(path: str):
+def load_json(path):
     with open(path) as f:
         return json.load(f)
 
-def save_series(path: str, blob):
+def save_json(path, obj):
     with open(path, 'w') as f:
-        json.dump(blob, f, indent=2)
+        json.dump(obj, f, indent=2)
+
+def clamp_floor(v, floor):
+    return v if v >= floor else floor
+
+def clamp_0_100(v):
+    return 0 if v < 0 else (100 if v > 100 else v)
+
+def compute_weighted_raw(scores_0_100: dict) -> float:
+    """Return weighted 0-100 composite based on WEIGHTS."""
+    total = 0.0
+    for k, w in WEIGHTS.items():
+        total += float(scores_0_100.get(k, 50)) * w
+    return total
+
+def apply_modifiers(raw_0_100: float, entropy: float, sentiment: float) -> float:
+    """
+    Apply entropy as multiplicative drag and sentiment as additive boost
+    in the 0-100 space, then clamp to 0..100.
+    """
+    entropy = clamp_0_100(entropy)
+    sentiment = clamp_0_100(sentiment)
+
+    entropy_modifier = (entropy / 100.0) * BETA          # 0 .. BETA
+    adjusted = raw_0_100 * (1.0 - entropy_modifier)      # drag
+
+    sentiment_boost = (sentiment - 50.0) * GAMMA / 1.0   # additive points
+    final = adjusted + sentiment_boost
+    return clamp_0_100(final)
 
 def main():
-    blob = load_series(DATA_PATH)
-    series = blob['series']
+    # Load current GTI series and today’s category inputs
+    gti_blob = load_json(GTI_PATH)
+    cat_blob = load_json(CATEGORIES_PATH)
 
-    # Current last value
+    series = gti_blob['series']
+    today_scores = cat_blob.get('scores', {})
+    mods = cat_blob.get('modifiers', {})
+    entropy = float(mods.get('entropy', 50))
+    sentiment = float(mods.get('sentiment', 50))
+
+    # 1) Weighted composite (0-100)
+    raw = compute_weighted_raw(today_scores)
+
+    # 2) Modifiers in 0-100 space
+    final_0_100 = apply_modifiers(raw, entropy, sentiment)
+
+    # 3) Convert to stock-style delta
+    delta = (final_0_100 - 50.0) * ALPHA
+
+    # 4) Update last point in the series, respecting floor
     last_val = float(series[-1]['gti'])
+    next_val = clamp_floor(last_val + delta, MIN_FLOOR)
+    series[-1]['gti'] = round(next_val, 2)
 
-    # Placeholder daily change (replace with real GTI calculation later)
-    nudge = random.uniform(*NUDGE_RANGE)
-    new_val = last_val + nudge
+    # 5) Timestamp and save
+    gti_blob['updated'] = datetime.datetime.utcnow().isoformat() + 'Z'
+    save_json(GTI_PATH, gti_blob)
 
-    # Enforce non-zero soft floor
-    new_val = clamp_floor(new_val, MIN_FLOOR)
-
-    # Update the last point only (we're still in 2025 in this prototype)
-    series[-1]['gti'] = round(new_val, 2)
-
-    # Timestamp
-    blob['updated'] = datetime.datetime.utcnow().isoformat() + 'Z'
-
-    save_series(DATA_PATH, blob)
-    print('Updated:', blob['updated'], 'Last GTI:', series[-1]['gti'], 'Floor:', MIN_FLOOR)
+    print(f"RAW={raw:.2f} FINAL={final_0_100:.2f} Δ={delta:.2f} → GTI={next_val:.2f} (floor {MIN_FLOOR})")
 
 if __name__ == "__main__":
     main()
