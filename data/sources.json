@@ -9,6 +9,10 @@
     { "category": "Planetary Health", "name": "NOAA Mauna Loa CO₂", "link": "https://gml.noaa.gov/ccgg/trends/", "notes": "Used to derive a simple health proxy." },
     { "category": "Sentiment & Culture", "name": "BBC & Al Jazeera RSS", "link": "https://www.bbc.co.uk/news/10628494", "notes": "Headlines sentiment (lexicon-based stub)." },
     { "category": "Entropy Index", "name": "BBC/NYT/Al Jazeera RSS", "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "notes": "Risk/chaos token density." }
-    { "category": "Economic Wellbeing", "name": "World Bank (WLD) – inflation, unemployment, GDP pc growth", "link": "https://data.worldbank.org/", "notes": "No-key API; latest available year" }
+    { "category": "Economic Wellbeing", "name": "World Bank (WLD) – inflation, unemployment, GDP pc growth", "link": "https://data.worldbank.org/", "notes": "No-key API; latest available year" },
+    { "category": "Public Health", "name": "WHO Disease Outbreak News (RSS)", "link": "https://www.who.int/feeds/entity/csr/don/en/rss.xml", "notes": "Headline severity proxy" },
+    { "category": "Global Peace & Conflict", "name": "NYT/BBC/Al Jazeera World RSS", "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "notes": "Violence/risk token density" }
+]
+    
   ]
 }
