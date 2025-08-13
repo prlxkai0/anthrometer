@@ -11,7 +11,7 @@
     "Entropy Index": 68
   },
   "modifiers": {
-    "entropy": 68,     // 0-100 (higher = more systemic strain)
-    "sentiment": 52    // 0-100 (50 = neutral)
+    "entropy": 68,
+    "sentiment": 52
   }
 }
