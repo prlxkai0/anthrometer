@@ -1,17 +1,46 @@
 {
   "methodology": [
     "Weighted hybrid model across 8 categories.",
-    "0–100 category scores; GTI index is unbounded (soft floor).",
+    "Category scores are 0–100; GTI index is unbounded (soft floor=100).",
     "Entropy = multiplicative drag; Sentiment = additive boost.",
     "Daily updates via GitHub Actions; site is static for privacy/cost."
   ],
   "sources": [
-    { "category": "Planetary Health", "name": "NOAA Mauna Loa CO₂", "link": "https://gml.noaa.gov/ccgg/trends/", "notes": "Used to derive a simple health proxy." },
-    { "category": "Sentiment & Culture", "name": "BBC & Al Jazeera RSS", "link": "https://www.bbc.co.uk/news/10628494", "notes": "Headlines sentiment (lexicon-based stub)." },
-    { "category": "Entropy Index", "name": "BBC/NYT/Al Jazeera RSS", "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "notes": "Risk/chaos token density." }
-    { "category": "Economic Wellbeing", "name": "World Bank (WLD) – inflation, unemployment, GDP pc growth", "link": "https://data.worldbank.org/", "notes": "No-key API; latest available year" },
-    { "category": "Public Health", "name": "WHO Disease Outbreak News (RSS)", "link": "https://www.who.int/feeds/entity/csr/don/en/rss.xml", "notes": "Headline severity proxy" },
-    { "category": "Global Peace & Conflict", "name": "NYT/BBC/Al Jazeera World RSS", "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "notes": "Violence/risk token density" }
-]
-    
+    {
+      "category": "Planetary Health",
+      "name": "NOAA Mauna Loa CO₂",
+      "link": "https://gml.noaa.gov/ccgg/trends/",
+      "notes": "CO₂ ppm → 0–100 proxy"
+    },
+    {
+      "category": "Economic Wellbeing",
+      "name": "World Bank (WLD) – inflation, unemployment, GDP pc growth",
+      "link": "https://data.worldbank.org/",
+      "notes": "Latest available year"
+    },
+    {
+      "category": "Public Health",
+      "name": "WHO Disease Outbreak News (RSS)",
+      "link": "https://www.who.int/feeds/entity/csr/don/en/rss.xml",
+      "notes": "Headline severity proxy"
+    },
+    {
+      "category": "Global Peace & Conflict",
+      "name": "NYT/BBC/Al Jazeera World RSS",
+      "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+      "notes": "Violence/risk token density"
+    },
+    {
+      "category": "Sentiment & Culture",
+      "name": "BBC & Al Jazeera RSS",
+      "link": "https://www.bbc.co.uk/news/10628494",
+      "notes": "Lexicon sentiment (50 = neutral)"
+    },
+    {
+      "category": "Entropy Index",
+      "name": "Global RSS mix",
+      "link": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+      "notes": "Risk/chaos tokens → 0–100 (higher = worse)"
+    }
+  ]
 }
