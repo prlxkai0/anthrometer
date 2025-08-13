@@ -1,0 +1,17 @@
+{
+  "updated": "2025-08-13T00:00:00Z",
+  "scores": {
+    "Planetary Health": 42,
+    "Economic Wellbeing": 58,
+    "Global Peace & Conflict": 45,
+    "Public Health": 65,
+    "Civic Freedom & Rights": 60,
+    "Technological Progress": 75,
+    "Sentiment & Culture": 52,
+    "Entropy Index": 68
+  },
+  "modifiers": {
+    "entropy": 68,     // 0-100 (higher = more systemic strain)
+    "sentiment": 52    // 0-100 (50 = neutral)
+  }
+}
