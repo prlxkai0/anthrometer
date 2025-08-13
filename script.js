@@ -1,26 +1,31 @@
-// script.js — Live feel: auto-refresh, LIVE strip, signals, KPI delta, replot in place
+// script.js — AnthroMeter front-end
+// Live feel: auto-refresh, LIVE strip, signals (Planetary, Sentiment, Markets), KPI delta, replot in place
 document.addEventListener('DOMContentLoaded', () => {
+  // ---------- Cache-busted endpoints ----------
   const bust = () => Date.now();
   const urls = {
-    gti: () => `./data/gti.json?t=${bust()}`,
-    cat: () => `./data/categories.json?t=${bust()}`,
-    src: () => `./data/sources.json?t=${bust()}`,
-    chg: () => `./data/changelog.json?t=${bust()}`,
-    evt: () => `./data/events.json?t=${bust()}`,
-    sum: () => `./data/summaries.json?t=${bust()}`,
+    gti:    () => `./data/gti.json?t=${bust()}`,
+    cat:    () => `./data/categories.json?t=${bust()}`,
+    src:    () => `./data/sources.json?t=${bust()}`,
+    chg:    () => `./data/changelog.json?t=${bust()}`,
+    evt:    () => `./data/events.json?t=${bust()}`,
+    sum:    () => `./data/summaries.json?t=${bust()}`,
     status: () => `./data/status.json?t=${bust()}`
   };
 
-  // DOM refs
+  // ---------- DOM refs ----------
+  // Header (legacy, hidden by CSS but still populated)
   const elUpdated = document.getElementById('updated');
   const elCY = document.getElementById('current-year');
   const elCV = document.getElementById('current-gti');
 
-  const kpiYear = document.getElementById('kpi-year');
-  const kpiGTI  = document.getElementById('kpi-gti');
-  const kpiUpd  = document.getElementById('kpi-updated');
-  const kpiDelta= document.getElementById('kpi-delta');
+  // KPI card
+  const kpiYear  = document.getElementById('kpi-year');
+  const kpiGTI   = document.getElementById('kpi-gti');
+  const kpiUpd   = document.getElementById('kpi-updated');
+  const kpiDelta = document.getElementById('kpi-delta');
 
+  // Controls
   const selColor  = document.getElementById('line-color');
   const selWeight = document.getElementById('line-weight');
   const chkDark   = document.getElementById('dark-mode');
@@ -28,11 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPNG    = document.getElementById('btn-png');
   const btnCSV    = document.getElementById('btn-csv');
 
-  const CHART_ID = 'chart-plot';
-  const liveAgo = document.getElementById('live-ago');
-  const autoToggle = document.getElementById('auto-refresh');
+  // LIVE strip
+  const liveAgo     = document.getElementById('live-ago');
+  const autoToggle  = document.getElementById('auto-refresh');
 
-  // Floating Year Summary
+  // Chart + summary
+  const CHART_ID = 'chart-plot';
   const ys = {
     panel: document.getElementById('year-summary'),
     close: document.getElementById('ys-close'),
@@ -49,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ysTimer = setTimeout(() => { ys.panel.style.display = 'none'; }, 10000);
   }
 
-  // Tabs
+  // ---------- Tabs ----------
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -65,29 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   });
 
-  // Helpers
-  async function getJSON(url){ const r = await fetch(url, { cache: 'no-store' }); if(!r.ok) throw new Error(url + ' → ' + r.status); return r.json(); }
+  // ---------- Helpers ----------
+  async function getJSON(url){
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+    return r.json();
+  }
   function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
   function computeRange(years){
     const pick = (selRange && selRange.value) || 'all';
     if (!years || !years.length) return undefined;
     const maxYear = years[years.length - 1];
-    if (pick === 'decade') return [maxYear - 9, maxYear];
+    if (pick === 'decade') return [maxYear - 9,  maxYear];
     if (pick === '20y')    return [maxYear - 19, maxYear];
     if (pick === '5y')     return [maxYear - 4,  maxYear];
     return undefined;
   }
+  function msAgo(iso){ const t = new Date(iso).getTime(); return Date.now() - (isNaN(t)?Date.now():t); }
+  function humanAgo(ms){
+    const s = Math.floor(ms/1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s/60); if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m/60); if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h/24); return `${d}d ago`;
+  }
 
-  // State
+  // ---------- State ----------
   let GTI_SERIES = [];
   let EVENTS = {};
   let SUMMARIES = {};
-  let lastStatusISO = null; // last status updated timestamp
+  let lastStatusISO = null;
 
-  // Plot
+  // ---------- Plot ----------
   function plotLine(){
     const el = document.getElementById(CHART_ID);
     if (!el) return;
+
     if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length === 0) {
       el.innerHTML = '<div style="padding:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">No GTI data found.</div>';
       return;
@@ -97,24 +116,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const vals  = GTI_SERIES.map(d => d.gti);
     const lastIdx = years.length - 1;
     const lastYear = years[lastIdx];
-    const lastVal = vals[lastIdx];
+    const lastVal  = vals[lastIdx];
 
-    if (elCY) elCY.textContent = lastYear ?? '—';
-    if (elCV) elCV.textContent = (lastVal!=null) ? Math.round(lastVal) : '—';
+    // Update KPI + legacy header
+    if (elCY) elCY.textContent = (lastYear ?? '—');
+    if (elCV) elCV.textContent = (lastVal != null) ? Math.round(lastVal) : '—';
     if (kpiYear) kpiYear.textContent = elCY.textContent;
     if (kpiGTI)  kpiGTI.textContent  = elCV.textContent;
 
-    const colorMap = { blue:'#2563eb', green:'#059669', purple:'#7c3aed', orange:'#ea580c', red:'#dc2626' };
-    const lineColor = (localStorage.getItem('prefs') && JSON.parse(localStorage.getItem('prefs')).lineColor) || 'auto';
-    const useColor = (lineColor !== 'auto') ? colorMap[lineColor] : undefined;
+    // Style prefs
     const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
+    const colorMap = { blue:'#2563eb', green:'#059669', purple:'#7c3aed', orange:'#ea580c', red:'#dc2626' };
+    const useColor = (prefs.lineColor && prefs.lineColor !== 'auto') ? colorMap[prefs.lineColor] : undefined;
     const useWidth = Number(prefs.lineWeight || 3);
 
+    // Annotations
     const anno = { 1918:'1918: Flu Pandemic', 1945:'1945: WWII Ends', 2008:'2008: Financial Crisis', 2020:'2020: COVID-19' };
     const annotations = Object.keys(anno).map(k => parseInt(k,10))
       .filter(y => years.includes(y))
       .map(y => ({ x:y, y: vals[years.indexOf(y)], text: anno[y], showarrow:true, arrowhead:2, ax:0, ay:-40 }));
 
+    // Range + optional decade shade
     const xr = computeRange(years);
     const shapes = (!xr) ? [{
       type:'rect', xref:'x', yref:'paper',
@@ -163,15 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(console.error);
   }
 
+  // ---------- Details (Categories) ----------
   function renderCategories(cats){
     if (!cats) return;
-    // Bars
     const order = [
       "Planetary Health","Economic Wellbeing","Global Peace & Conflict",
       "Public Health","Civic Freedom & Rights","Technological Progress",
       "Sentiment & Culture","Entropy Index"
     ];
     const rows = order.map(k => ({ name:k, score: (cats.scores && typeof cats.scores[k]==='number') ? cats.scores[k] : 50 }));
+
     if (document.getElementById('category-bars')) {
       Plotly.newPlot('category-bars', [{
         x: rows.map(r=>r.score), y: rows.map(r=>r.name),
@@ -188,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ---------- Sources & Methodology ----------
   function renderSources(src){
     const listEl = document.getElementById('sources-list');
     const methEl = document.getElementById('methodology');
@@ -202,32 +226,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ---------- Change Log ----------
   function renderChangelog(cl){
     const listEl = document.getElementById('changelog-list');
     if (!listEl) return;
-    const rows = ((cl && cl.entries) || []).map(e => `<li><div class="cl-date">${e.date}</div><div class="cl-change">${e.change}</div></li>`).join('');
+    const rows = ((cl && cl.entries) || []).map(e =>
+      `<li><div class="cl-date">${e.date}</div><div class="cl-change">${e.change}</div></li>`
+    ).join('');
     listEl.innerHTML = `<ul>${rows}</ul>`;
   }
 
-  // Signals panel + LIVE strip
-  function msAgo(iso){ const t = new Date(iso).getTime(); return Date.now() - (isNaN(t)?Date.now():t); }
-  function humanAgo(ms){
-    const s = Math.floor(ms/1000);
-    if (s < 60) return `${s}s ago`;
-    const m = Math.floor(s/60); if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m/60); if (h < 24) return `${h}h ago`;
-    const d = Math.floor(h/24); return `${d}d ago`;
-  }
+  // ---------- Today’s Signals + LIVE strip ----------
   function renderSignals(status){
-    // Live strip
+    // LIVE strip + timestamps
     if (status && status.updated_iso) {
       const t = new Date(status.updated_iso).toUTCString();
-      if (kpiUpd) kpiUpd.textContent = t;
+      if (kpiUpd)    kpiUpd.textContent = t;
       if (elUpdated) elUpdated.textContent = t;
-      if (liveAgo) liveAgo.textContent = `updated ${humanAgo(msAgo(status.updated_iso))}`;
+      if (liveAgo)   liveAgo.textContent = `updated ${humanAgo(msAgo(status.updated_iso))}`;
     }
 
-    // KPI delta
+    // KPI delta vs 30d avg
     if (status && typeof status.gti_last === 'number' && typeof status.gti_30d_avg === 'number') {
       const last = status.gti_last, avg = status.gti_30d_avg;
       const pct = avg ? ((last - avg)/avg)*100 : 0;
@@ -236,37 +255,58 @@ document.addEventListener('DOMContentLoaded', () => {
       if (kpiDelta) kpiDelta.innerHTML = `<span class="sig-diff ${cls}">${arrow} ${pct.toFixed(2)}% vs 30d</span>`;
     }
 
-    // Today’s Signals list
     const ul = document.getElementById('signals-list');
     if (!ul || !status) return;
-    function diffSpan(v){ return v >= 0 ? `<span class="sig-diff up">▲ ${v.toFixed(2)}</span>` : `<span class="sig-diff down">▼ ${Math.abs(v).toFixed(2)}</span>`; }
+
+    function diffSpanDir(v, dir){ // dir: 'up' means higher=better; 'down' means lower=better
+      if (v === undefined || v === null) return '';
+      const isGood = (dir === 'up' ? v >= 0 : v <= 0);
+      const arrow = isGood ? '▲' : '▼';
+      const cls = isGood ? 'up' : 'down';
+      return `<span class="sig-diff ${cls}">${arrow} ${Math.abs(v).toFixed(2)}</span>`;
+    }
 
     const items = [];
+
+    // Planetary
     if (status.planetary) {
-      items.push(`<li>
-        <span class="sig-name">CO₂ (ppm)</span>
-        <span class="sig-val">${status.planetary.co2_ppm?.toFixed?.(2) ?? '—'} ${diffSpan(status.planetary.delta_ppm || 0)}</span>
-      </li>
-      <li>
-        <span class="sig-name">Temp anomaly (°C)</span>
-        <span class="sig-val">${status.planetary.gistemp_anom_c?.toFixed?.(2) ?? '—'} ${diffSpan(status.planetary.delta_anom || 0)}</span>
-      </li>`);
+      items.push(`<li><span class="sig-name">CO₂ (ppm)</span>
+        <span class="sig-val">${status.planetary.co2_ppm?.toFixed?.(2) ?? '—'} ${diffSpanDir(status.planetary.delta_ppm ?? 0, 'down')}</span></li>`);
+      items.push(`<li><span class="sig-name">Temp anomaly (°C)</span>
+        <span class="sig-val">${status.planetary.gistemp_anom_c?.toFixed?.(2) ?? '—'} ${diffSpanDir(status.planetary.delta_anom ?? 0, 'down')}</span></li>`);
     }
+
+    // Sentiment
     if (status.sentiment) {
-      items.push(`<li>
-        <span class="sig-name">News tone (30d avg)</span>
-        <span class="sig-val">${(status.sentiment.avg_tone_30d ?? 0).toFixed(2)} ${diffSpan(status.sentiment.delta_tone || 0)}</span>
-      </li>`);
+      items.push(`<li><span class="sig-name">News tone (30d avg)</span>
+        <span class="sig-val">${(status.sentiment.avg_tone_30d ?? 0).toFixed(2)} ${diffSpanDir(status.sentiment.delta_tone ?? 0, 'up')}</span></li>`);
     }
+
+    // Markets (ACWI, VIX, Brent)
+    if (status.markets) {
+      if (status.markets.acwi_last != null) {
+        const retPct = (status.markets.acwi_ret30 ?? 0) * 100;
+        items.push(`<li><span class="sig-name">ACWI (30d return)</span>
+          <span class="sig-val">${retPct.toFixed(2)}% ${diffSpanDir(retPct, 'up')}</span></li>`);
+      }
+      if (status.markets.vix != null) {
+        // For VIX: lower is better (so dir='down')
+        items.push(`<li><span class="sig-name">VIX (level)</span>
+          <span class="sig-val">${Number(status.markets.vix).toFixed(2)} ${diffSpanDir(status.markets.vix - 0, 'down')}</span></li>`);
+      }
+      if (status.markets.brent_last != null && status.markets.brent_vol30 != null) {
+        items.push(`<li><span class="sig-name">Brent 30d vol</span>
+          <span class="sig-val">${(status.markets.brent_vol30*100).toFixed(2)}% ${diffSpanDir(status.markets.brent_vol30, 'down')}</span></li>`);
+      }
+    }
+
     ul.innerHTML = items.join('');
 
     const foot = document.getElementById('signals-foot');
-    if (foot) {
-      foot.textContent = status.note || 'Signals compare to their recent baselines.';
-    }
+    if (foot) foot.textContent = status.note || 'Signals compare to recent baselines.';
   }
 
-  // Preferences + controls
+  // ---------- Preferences & controls ----------
   const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
   if (typeof prefs.darkMode === 'undefined') {
     const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
@@ -279,17 +319,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (chkDark)   chkDark.checked = !!prefs.darkMode;
   if (selRange)  selRange.value  = prefs.range || 'all';
 
+  function savePrefs(){ localStorage.setItem('prefs', JSON.stringify(prefs)); }
   function replot(){ plotLine(); }
 
-  selColor  && selColor.addEventListener('change',  () => { prefs.lineColor  = selColor.value; localStorage.setItem('prefs', JSON.stringify(prefs)); replot(); });
-  selWeight && selWeight.addEventListener('change', () => { prefs.lineWeight = Number(selWeight.value); localStorage.setItem('prefs', JSON.stringify(prefs)); replot(); });
-  chkDark   && chkDark.addEventListener('change',   () => { prefs.darkMode   = chkDark.checked; document.body.classList.toggle('dark', prefs.darkMode); localStorage.setItem('prefs', JSON.stringify(prefs)); replot(); });
-  selRange  && selRange.addEventListener('change',  () => { prefs.range      = selRange.value; localStorage.setItem('prefs', JSON.stringify(prefs)); replot(); });
+  selColor  && selColor.addEventListener('change',  () => { prefs.lineColor  = selColor.value; savePrefs(); replot(); });
+  selWeight && selWeight.addEventListener('change', () => { prefs.lineWeight = Number(selWeight.value); savePrefs(); replot(); });
+  chkDark   && chkDark.addEventListener('change',   () => { prefs.darkMode   = chkDark.checked; document.body.classList.toggle('dark', prefs.darkMode); savePrefs(); replot(); });
+  selRange  && selRange.addEventListener('change',  () => { prefs.range      = selRange.value; savePrefs(); replot(); });
 
-  document.getElementById('btn-png')?.addEventListener('click', async ()=> {
+  // Export buttons
+  btnPNG && btnPNG.addEventListener('click', async ()=> {
     try { await Plotly.downloadImage(CHART_ID, { format:'png', filename:'anthrometer-gti' }); } catch(e){}
   });
-  document.getElementById('btn-csv')?.addEventListener('click', () => {
+  btnCSV && btnCSV.addEventListener('click', () => {
     if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length === 0) return;
     const rows = ['year,gti'].concat(GTI_SERIES.map(d => `${d.year},${d.gti}`)).join('\n');
     const blob = new Blob([rows], { type:'text/csv' });
@@ -298,12 +340,20 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 
+  // Summary close + esc
   ys.close && ys.close.addEventListener('click', () => { ys.panel && (ys.panel.style.display = 'none'); if (ysTimer) clearTimeout(ysTimer); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ys.panel && ys.panel.style.display !== 'none') { ys.panel.style.display = 'none'; if (ysTimer) clearTimeout(ysTimer);} });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ys.panel && ys.panel.style.display !== 'none') {
+      ys.panel.style.display = 'none'; if (ysTimer) clearTimeout(ysTimer);
+    }
+  });
 
-  window.addEventListener('resize', () => { if (window.Plotly) { try { Plotly.Plots.resize(CHART_ID); } catch(e){} } });
+  // Resize
+  window.addEventListener('resize', () => {
+    if (window.Plotly) { try { Plotly.Plots.resize(CHART_ID); } catch(e){} }
+  });
 
-  // Initial load + polling
+  // ---------- Initial load + polling ----------
   async function loadAll(){
     const [gti, cats, src, chg, evt, sum, status] = await Promise.all([
       getJSON(urls.gti()),
@@ -314,14 +364,17 @@ document.addEventListener('DOMContentLoaded', () => {
       getJSON(urls.sum()).catch(()=>({})),
       getJSON(urls.status()).catch(()=>null)
     ]);
+
     GTI_SERIES = (gti && gti.series) ? gti.series : [];
     EVENTS     = evt || {};
     SUMMARIES  = sum || {};
+
     if (gti && gti.updated) {
       const ts = new Date(gti.updated).toUTCString();
       if (elUpdated) elUpdated.textContent = ts;
       if (kpiUpd)    kpiUpd.textContent    = ts;
     }
+
     plotLine();
     renderCategories(cats);
     renderSources(src);
@@ -330,27 +383,28 @@ document.addEventListener('DOMContentLoaded', () => {
     lastStatusISO = status?.updated_iso || lastStatusISO;
   }
 
-  // Poll every 60s if auto-refresh is on; also update "updated X ago" every 10s
   async function poll(){
     try {
       const status = await getJSON(urls.status());
       if (status?.updated_iso) {
         if (liveAgo) liveAgo.textContent = `updated ${humanAgo(msAgo(status.updated_iso))}`;
         if (lastStatusISO !== status.updated_iso) {
-          // data changed → reload all JSONs and re-render
-          await loadAll();
+          await loadAll();         // re-fetch everything & re-render
           lastStatusISO = status.updated_iso;
         }
       }
-    } catch { /* ignore transient */ }
+    } catch { /* transient network error — ignore */ }
   }
 
-  autoToggle?.addEventListener('change', ()=>{ /* state is read in intervals below */ });
+  // Auto-refresh toggles
+  autoToggle?.addEventListener('change', ()=>{ /* state checked in intervals */ });
 
+  // Kick things off
   loadAll().catch(console.error);
 
+  // Poll every 60s if auto-refresh is on; refresh "ago" clock every 10s
   setInterval(()=>{ if (autoToggle?.checked) poll(); }, 60000);
-  setInterval(async ()=>{ // refresh the "ago" clock even if no new data
+  setInterval(async ()=>{ // refresh "updated X ago" text
     try {
       const s = await getJSON(urls.status());
       if (s?.updated_iso && liveAgo) liveAgo.textContent = `updated ${humanAgo(msAgo(s.updated_iso))}`;
