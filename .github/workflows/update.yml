@@ -17,31 +17,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Show environment & files
-        run: |
-          uname -a
-          python3 -V || true
-          ls -la
-          echo "---- data dir ----"
-          ls -la data || true
-          echo "---- show gti.json head ----"
-          sed -n '1,80p' data/gti.json || true
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Run updater
-        run: python3 updater.py
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          # stdlib-only scripts, but install lxml if RSS XML complains
+          python - << 'PY'
+import sys
+print("No external deps required by default.")
+PY
+
+      - name: Run updater (with stubs)
+        run: python updater.py
 
       - name: Show diff
         run: |
           git status
-          git diff -- data/gti.json || true
+          git diff -- data/gti.json data/categories.json || true
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'chore: daily GTI update'
-          file_pattern: data/gti.json
+          commit_message: 'chore: daily GTI update (planetary+sentiment stubs)'
+          file_pattern: data/gti.json data/categories.json
