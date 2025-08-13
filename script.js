@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (c) c.innerHTML = '<div style="padding:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">No GTI data found.</div>';
       return;
     } else if (c) {
-      c.innerHTML = ''; // clear any previous fallback
+      c.innerHTML = ''; // clear fallback
     }
 
     const years = GTI_SERIES.map(d => d.year);
