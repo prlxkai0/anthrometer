@@ -84,15 +84,29 @@
   </div>
 </div>
 
-  <section id="chart" class="card"></section>
+<section id="chart" class="card" style="position:relative; padding-bottom:56px"></section>
 
-  <div id="year-summary" class="card" style="display:none;">
-    <h2 class="h2">Year Summary</h2>
-    <p><strong id="ys-year">—</strong></p>
-    <p id="ys-hover">—</p>
-    <p id="ys-ai">—</p>
+<!-- Floating Year Summary (hidden by default) -->
+<div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
+  <div class="summary-head">
+    <div>
+      <div class="summary-label">Year</div>
+      <div id="ys-year" class="summary-year">—</div>
+    </div>
+    <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
   </div>
-</section>
+  <div class="summary-row">
+    <div class="summary-box">
+      <div class="summary-label">GTI</div>
+      <div id="ys-gti" class="summary-gti">—</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Context</div>
+      <div id="ys-hover" class="summary-text">—</div>
+    </div>
+  </div>
+  <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
+</div>
 
   <!-- Tab: Details -->
   <section id="tab-details" class="tabpanel">
