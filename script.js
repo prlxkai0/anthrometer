@@ -10,17 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const elCY = document.getElementById('current-year');
   const elCV = document.getElementById('current-gti');
 
-  // Controls
   const selColor  = document.getElementById('line-color');
   const selWeight = document.getElementById('line-weight');
-  const chkDecade = document.getElementById('decade-zoom');
+  const chkDecade = document.getElementById('decade-zoom'); // kept for backward compat
   const chkDark   = document.getElementById('dark-mode');
+  const selRange  = document.getElementById('range-select');
+  const btnPNG    = document.getElementById('btn-png');
+  const btnCSV    = document.getElementById('btn-csv');
 
-  // Load saved prefs
   const prefs = JSON.parse(localStorage.getItem('prefs') || '{}');
   function savePrefs(){ localStorage.setItem('prefs', JSON.stringify(prefs)); }
-
-  // Apply saved theme early
   if (prefs.darkMode === true) document.body.classList.add('dark');
 
   // Tabs
@@ -31,15 +30,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!target) return;
       document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
-      btn.classList.add('active');
-      target.classList.add('active');
+      btn.classList.add('active'); target.classList.add('active');
     }, { passive: true });
   });
 
   async function getJSON(url){ const r = await fetch(url, {cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }
+  function getVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
 
   let GTI_SERIES = []; let EVENTS = {}; let SUMMARIES = {};
-  let LAYOUT_THEME = {}; // set per mode
+  function computeRange(years){
+    const maxYear = years[years.length-1];
+    const pick = (selRange && selRange.value) || (prefs.decadeZoom ? 'decade' : 'all');
+    if (pick === 'decade') return [maxYear-9, maxYear];
+    if (pick === '20y')   return [maxYear-19, maxYear];
+    if (pick === '5y')    return [maxYear-4,  maxYear];
+    return undefined; // all
+  }
 
   function plotLine(){
     if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length === 0) return;
@@ -49,28 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
     elCY.textContent = years[lastIdx] != null ? years[lastIdx] : '—';
     elCV.textContent = vals[lastIdx]  != null ? Math.round(vals[lastIdx]) : '—';
 
-    // map color choice to Plotly color
     const colorMap = { blue:'#2563eb', green:'#059669', purple:'#7c3aed', orange:'#ea580c', red:'#dc2626' };
     const useColor = (prefs.lineColor && prefs.lineColor!=='auto') ? colorMap[prefs.lineColor] : undefined;
     const useWidth = Number(prefs.lineWeight || 3);
 
-    // annotations
     const annoLabels = { 1918:'1918: Flu Pandemic', 1945:'1945: WWII Ends', 2008:'2008: Financial Crisis', 2020:'2020: COVID-19' };
     const annotations = Object.keys(annoLabels).map(k=>parseInt(k,10))
       .filter(y => years.indexOf(y)!==-1)
       .map(y => ({ x:y, y: vals[years.indexOf(y)], text: annoLabels[y], showarrow:true, arrowhead:2, ax:0, ay:-40 }));
 
-    // decade highlight shape (only when NOT zoomed)
-    const maxYear = years[years.length-1];
-    const minDecade = maxYear - 9;
-    const shapes = (!prefs.decadeZoom) ? [{
-      type:'rect', xref:'x', yref:'paper', x0:minDecade, x1:maxYear, y0:0, y1:1,
+    const xr = computeRange(years);
+    const shapes = (!xr) ? [{
+      type:'rect', xref:'x', yref:'paper', x0:years[years.length-1]-9, x1:years[years.length-1], y0:0, y1:1,
       fillcolor: (document.body.classList.contains('dark') ? 'rgba(148,163,184,0.10)' : 'rgba(2,132,199,0.08)'),
       line:{width:0}
     }] : [];
-
-    // x-range if zoomed
-    const xr = (prefs.decadeZoom) ? [minDecade, maxYear] : undefined;
 
     Plotly.newPlot('chart', [{
       x: years, y: vals, type:'scatter', mode:'lines',
@@ -79,26 +78,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }], {
       margin:{l:60,r:20,t:50,b:40},
       title:'Good Times Index (GTI) — 1900 to 2025',
-      xaxis:{title:'Year', showgrid:true, gridcolor: getVar('--grid'), range: xr},
-      yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor: getVar('--grid')},
+      xaxis:{title:'Year', showgrid:true, gridcolor:getVar('--grid'), range:xr},
+      yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor:getVar('--grid')},
       annotations, shapes,
-      paper_bgcolor: getVar('--bg'), plot_bgcolor: getVar('--card'), font:{color:getVar('--fg')}
+      paper_bgcolor:getVar('--bg'), plot_bgcolor:getVar('--card'), font:{color:getVar('--fg')}
     }, {displayModeBar:false, responsive:true}).then(gd => {
       gd.on('plotly_hover', ev => {
-        if (!ev || !ev.points || !ev.points[0]) return;
-        const year = String(ev.points[0].x);
-        const hover = EVENTS[year];
-        if (hover) {
-          document.getElementById('ys-year').textContent = year;
-          document.getElementById('ys-hover').textContent = hover;
-        }
+        const year = ev?.points?.[0]?.x; if (!year) return;
+        const hover = EVENTS[String(year)];
+        if (hover) { document.getElementById('ys-year').textContent = String(year); document.getElementById('ys-hover').textContent = hover; }
       });
       gd.on('plotly_click', ev => {
-        if (!ev || !ev.points || !ev.points[0]) return;
-        const year = String(ev.points[0].x);
-        const hover = EVENTS[year] || '—';
-        const ai = SUMMARIES[year] || 'Summary coming soon.';
-        document.getElementById('ys-year').textContent = year;
+        const year = ev?.points?.[0]?.x; if (!year) return;
+        const hover = EVENTS[String(year)] || '—';
+        const ai = SUMMARIES[String(year)] || 'Summary coming soon.';
+        document.getElementById('ys-year').textContent = String(year);
         document.getElementById('ys-hover').textContent = hover;
         document.getElementById('ys-ai').textContent = ai;
         document.getElementById('year-summary').style.display = 'block';
@@ -106,9 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
-
-  // Render categories/sources/changelog (same as before)
+  // Render category/sources/changelog (unchanged)
   function renderCategories(cats){
     if (!cats) return;
     const order = [
@@ -118,8 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const rows = order.map(k => ({ name:k, score:(cats.scores && typeof cats.scores[k] === 'number') ? cats.scores[k] : 50 }));
     Plotly.newPlot('category-bars', [{
-      x: rows.map(r=>r.score), y: rows.map(r=>r.name), type:'bar', orientation:'h',
-      hovertemplate:'%{y}: %{x}<extra></extra>'
+      x: rows.map(r=>r.score), y: rows.map(r=>r.name), type:'bar', orientation:'h', hovertemplate:'%{y}: %{x}<extra></extra>'
     }], { margin:{l:170,r:20,t:10,b:30}, xaxis:{range:[0,100], showgrid:true, gridcolor:getVar('--grid')},
           paper_bgcolor:getVar('--bg'), plot_bgcolor:getVar('--card'), font:{color:getVar('--fg')} },
        {displayModeBar:false, responsive:true});
@@ -145,18 +136,36 @@ document.addEventListener('DOMContentLoaded', () => {
     listEl.innerHTML = `<table><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
-  // Bind controls
+  // Bind controls (persist)
   if (selColor)  selColor.value  = prefs.lineColor  || 'auto';
   if (selWeight) selWeight.value = String(prefs.lineWeight || 3);
-  if (chkDecade) chkDecade.checked = !!prefs.decadeZoom;
   if (chkDark)   chkDark.checked   = !!prefs.darkMode;
+  if (selRange)  selRange.value  = prefs.range || 'all';
+  // legacy checkbox: mirror to dropdown
+  if (chkDecade) chkDecade.checked = (prefs.range === 'decade');
 
-  selColor && selColor.addEventListener('change', ()=>{ prefs.lineColor = selColor.value; savePrefs(); plotLine(); });
-  selWeight&& selWeight.addEventListener('change',()=>{ prefs.lineWeight = Number(selWeight.value); savePrefs(); plotLine(); });
-  chkDecade && chkDecade.addEventListener('change', ()=>{ prefs.decadeZoom = chkDecade.checked; savePrefs(); plotLine(); });
-  chkDark   && chkDark.addEventListener('change',   ()=>{ prefs.darkMode = chkDark.checked; savePrefs(); document.body.classList.toggle('dark', prefs.darkMode); plotLine(); });
+  function replot(){ plotLine(); }
+  selColor  && selColor.addEventListener('change', ()=>{ prefs.lineColor = selColor.value; savePrefs(); replot(); });
+  selWeight && selWeight.addEventListener('change', ()=>{ prefs.lineWeight = Number(selWeight.value); savePrefs(); replot(); });
+  chkDark   && chkDark.addEventListener('change',   ()=>{ prefs.darkMode = chkDark.checked; document.body.classList.toggle('dark', prefs.darkMode); savePrefs(); replot(); });
+  selRange  && selRange.addEventListener('change',  ()=>{ prefs.range = selRange.value; savePrefs(); replot(); });
+  // keep checkbox in sync (optional legacy)
+  chkDecade && chkDecade.addEventListener('change', ()=>{ prefs.range = chkDecade.checked ? 'decade' : 'all'; if (selRange) selRange.value = prefs.range; savePrefs(); replot(); });
 
-  // Load all data then draw
+  // Export buttons
+  btnPNG && btnPNG.addEventListener('click', async ()=> {
+    try { await Plotly.downloadImage('chart', {format:'png', filename:'anthrometer-gti'}); } catch(e){ console.error(e); }
+  });
+  btnCSV && btnCSV.addEventListener('click', ()=> {
+    if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length===0) return;
+    const rows = ['year,gti'].concat(GTI_SERIES.map(d => `${d.year},${d.gti}`)).join('\n');
+    const blob = new Blob([rows], {type:'text/csv'});
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='anthrometer-gti.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Load and render
   (async () => {
     const [gti, cats, src, cl, evMap, smap] = await Promise.all([
       getJSON(dataUrl),
@@ -176,9 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
   })().catch(err => {
     console.error(err);
     const c = document.getElementById('chart');
-    if (c) c.innerHTML =
-      `<div style="padding:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;">
-         Failed to load data: ${String(err)}
-       </div>`;
+    if (c) c.innerHTML = `<div style="padding:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;">
+      Failed to load data: ${String(err)}
+    </div>`;
   });
 });
