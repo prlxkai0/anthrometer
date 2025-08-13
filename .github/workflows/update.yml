@@ -1,46 +1,30 @@
 name: Update GTI Daily
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '17 5 * * *'   # daily at 05:17 UTC
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          # stdlib-only scripts, but install lxml if RSS XML complains
-          python - << 'PY'
-import sys
-print("No external deps required by default.")
-PY
-
-      - name: Run updater (with stubs)
-        run: python updater.py
-
-      - name: Show diff
-        run: |
-          git status
-          git diff -- data/gti.json data/categories.json || true
+      - name: Run updater
+        run: python3 updater.py
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'chore: daily GTI update (planetary+sentiment stubs)'
+          commit_message: 'chore: daily GTI update'
           file_pattern: data/gti.json data/categories.json
