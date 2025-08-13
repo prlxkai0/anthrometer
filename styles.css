@@ -44,3 +44,22 @@ h1{font-size:28px;margin:0 0 4px} .muted{color:var(--muted);font-weight:500}
 
 .tab{cursor:pointer; user-select:none}
 .tabs{position:relative; z-index:2} /* keep tabs above any plot overlays */
+
+/* Light/Dark theme tokens */
+:root {
+  --bg:#ffffff; --fg:#0f172a; --muted:#64748b; --grid:#e2e8f0; --card:#ffffff;
+}
+body.dark {
+  --bg:#0b1220; --fg:#e6edf5; --muted:#8aa0b6; --grid:#233447; --card:#0f1828;
+}
+body { background:var(--bg); color:var(--fg); }
+.card{ background:var(--card); }
+
+/* Controls */
+.controls .row{display:flex; flex-wrap:wrap; gap:12px; align-items:end}
+.controls .group{display:flex; flex-direction:column; gap:4px}
+.controls label{font-size:12px; color:var(--muted)}
+.controls select{padding:6px 10px; border-radius:8px; border:1px solid var(--grid); background:var(--bg); color:var(--fg)}
+.controls .toggle label{display:flex; align-items:center; gap:8px; font-weight:600; color:var(--fg)}
+.tab{cursor:pointer; user-select:none}
+.tabs{position:relative; z-index:2}
