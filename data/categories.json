@@ -1,5 +1,5 @@
 {
-  "updated": "2025-08-13T21:05:31.634732Z",
+  "updated": "2025-08-13T21:12:25.293537Z",
   "scores": {
     "Planetary Health": 42.0,
     "Economic Wellbeing": 58,
@@ -8,7 +8,7 @@
     "Civic Freedom & Rights": 60,
     "Technological Progress": 75,
     "Sentiment & Culture": 49.96,
-    "Entropy Index": 68
+    "Entropy Index": 31.44
   },
   "modifiers": {
     "entropy": 68.0,
