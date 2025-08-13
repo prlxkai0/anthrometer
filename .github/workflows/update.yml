@@ -23,8 +23,11 @@ jobs:
       - name: Run updater
         run: python3 updater.py
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore: daily GTI update'
-          file_pattern: data/gti.json data/categories.json
+- name: Commit changes
+  uses: stefanzweifel/git-auto-commit-action@v5
+  with:
+    commit_message: 'chore: daily GTI update'
+    file_pattern: |
+      data/gti.json
+      data/categories.json
+      data/changelog.json
