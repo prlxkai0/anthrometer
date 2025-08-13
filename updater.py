@@ -125,5 +125,24 @@ def main():
         f"(floor {MIN_FLOOR}, cap ±{MAX_DAILY_MOVE}, smoothing {SMOOTHING})"
     )
 
+CHANGELOG_PATH = os.path.join(DATA_DIR, 'changelog.json')
+
+def append_changelog_entry(date_str, change_str, max_entries=365):
+    try:
+        with open(CHANGELOG_PATH) as f:
+            blob = json.load(f)
+    except Exception:
+        blob = {"entries": []}
+    entries = blob.get("entries", [])
+    # avoid duplicate for same day
+    if not entries or entries[-1].get("date") != date_str:
+        entries.append({"date": date_str, "change": change_str})
+        # cap length
+        if len(entries) > max_entries:
+            entries = entries[-max_entries:]
+        blob["entries"] = entries
+        with open(CHANGELOG_PATH, "w") as f:
+            json.dump(blob, f, indent=2)
+
 if __name__ == "__main__":
     main()
