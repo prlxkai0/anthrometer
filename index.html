@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AnthroMeter / Good Times Index</title>
-  <link rel="stylesheet" href="./styles.css?v=7" />
-  <!-- Plotly (CDN) -->
+  <link rel="stylesheet" href="./styles.css?v=9" />
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
@@ -16,16 +15,27 @@
     </h1>
     <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
 
-    <!-- Legacy status row (hidden in CSS, still populated for safety) -->
+    <!-- Hidden legacy status (still populated) -->
     <div class="status">
       <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
       <span><strong>Year</strong> <span id="current-year">—</span></span>
       <span><strong>Last updated</strong> <span id="updated">—</span></span>
     </div>
+
+    <!-- LIVE strip -->
+    <div id="live-strip" class="live">
+      <span class="dot"></span>
+      <span class="live-text">LIVE</span>
+      <span class="sep">•</span>
+      <span id="live-ago" class="ago">updated —</span>
+      <label class="auto-refresh">
+        <input type="checkbox" id="auto-refresh" checked />
+        Auto-refresh
+      </label>
+    </div>
   </header>
 
   <main class="container">
-    <!-- Tabs -->
     <nav class="tabs">
       <a class="tab active" data-tab="overview">Overview</a>
       <a class="tab" data-tab="details">Details</a>
@@ -33,7 +43,7 @@
       <a class="tab" data-tab="changelog">Change Log</a>
     </nav>
 
-    <!-- Tab: Overview -->
+    <!-- Overview -->
     <section id="tab-overview" class="tabpanel active">
 
       <!-- KPI card -->
@@ -42,6 +52,7 @@
           <div class="kpi-item">
             <div class="kpi-label">Current GTI</div>
             <div class="kpi-value" id="kpi-gti">—</div>
+            <div class="kpi-delta" id="kpi-delta">—</div>
           </div>
           <div class="kpi-item">
             <div class="kpi-label">Year</div>
@@ -98,44 +109,54 @@
         </div>
       </div>
 
-      <!-- Chart card with dedicated inner container -->
-      <section class="card chart-card">
-        <div id="chart-plot"></div>
+      <!-- Chart + Signals -->
+      <section class="grid two">
+        <section class="card chart-card">
+          <div id="chart-plot"></div>
 
-        <!-- Floating Year Summary -->
-        <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
-          <div class="summary-head">
-            <div>
-              <div class="summary-label">Year</div>
-              <div id="ys-year" class="summary-year">—</div>
+          <!-- Floating Year Summary -->
+          <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
+            <div class="summary-head">
+              <div>
+                <div class="summary-label">Year</div>
+                <div id="ys-year" class="summary-year">—</div>
+              </div>
+              <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
             </div>
-            <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
+            <div class="summary-row">
+              <div class="summary-box">
+                <div class="summary-label">GTI</div>
+                <div id="ys-gti" class="summary-gti">—</div>
+              </div>
+              <div class="summary-box">
+                <div class="summary-label">Context</div>
+                <div id="ys-hover" class="summary-text">—</div>
+              </div>
+            </div>
+            <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
           </div>
-          <div class="summary-row">
-            <div class="summary-box">
-              <div class="summary-label">GTI</div>
-              <div id="ys-gti" class="summary-gti">—</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Context</div>
-              <div id="ys-hover" class="summary-text">—</div>
-            </div>
-          </div>
-          <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
-        </div>
+        </section>
+
+        <!-- Today’s Signals -->
+        <aside class="card signals">
+          <h2 class="h2">Today’s Signals</h2>
+          <ul id="signals-list" class="signals-list">
+            <!-- populated by script -->
+          </ul>
+          <div class="signals-foot" id="signals-foot">—</div>
+        </aside>
       </section>
     </section>
 
-    <!-- Tab: Details -->
+    <!-- Details -->
     <section id="tab-details" class="tabpanel">
       <div class="card" id="details-guide">
         <h2 class="h2">How to read these categories</h2>
         <ul class="bullets">
-          <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better). Bars show today’s estimate based on public signals.</li>
-          <li><strong>Weights:</strong> Categories contribute differently to the GTI (e.g., Public Health &amp; Planetary Health currently carry more weight).</li>
-          <li><strong>Modifiers:</strong> <em>Entropy</em> acts as a multiplicative drag (systemic disorder), and <em>Sentiment</em> adds/subtracts points (public mood).</li>
-          <li><strong>Updates:</strong> Some categories use live proxies (RSS/indices); others update less frequently and are smoothed daily.</li>
-          <li><strong>Context ≠ verdict:</strong> A low score flags stress in that dimension, not a final judgment. Click years on the chart to see context.</li>
+          <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better).</li>
+          <li><strong>Weights:</strong> Categories contribute differently to the GTI.</li>
+          <li><strong>Modifiers:</strong> <em>Entropy</em> (drag) and <em>Sentiment</em> (mood) are applied.</li>
+          <li><strong>Updates:</strong> Some categories use live proxies; others are smoothed.</li>
         </ul>
       </div>
 
@@ -151,7 +172,7 @@
       </div>
     </section>
 
-    <!-- Tab: Sources & Methodology -->
+    <!-- Sources -->
     <section id="tab-sources" class="tabpanel">
       <div class="grid two">
         <div class="card">
@@ -165,7 +186,7 @@
       </div>
     </section>
 
-    <!-- Tab: Change Log -->
+    <!-- Change Log -->
     <section id="tab-changelog" class="tabpanel">
       <div class="card">
         <h2 class="h2">Change Log</h2>
@@ -175,9 +196,9 @@
   </main>
 
   <footer class="container muted">
-    <small>© AnthroMeter — Open prototype. This site stores no cookies beyond local display preferences.</small>
+    <small>© AnthroMeter — Open prototype. No cookies beyond local display prefs.</small>
   </footer>
 
-  <script src="./script.js?v=7"></script>
+  <script src="./script.js?v=9"></script>
 </body>
 </html>
