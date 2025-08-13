@@ -67,3 +67,32 @@ body { background:var(--bg); color:var(--fg); }
 .btn{border:1px solid var(--grid); background:var(--bg); color:var(--fg);
      border-radius:10px; padding:6px 10px; cursor:pointer; font-weight:600; margin-right:6px}
 .btn:hover{filter:brightness(0.95)}
+
+.summary-card{
+  position:absolute; right:16px; bottom:16px; max-width:420px;
+  background:var(--card); color:var(--fg);
+  border:1px solid var(--grid); border-radius:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  padding:12px 12px 10px; z-index:3;
+}
+body.dark .summary-card{ box-shadow:0 8px 24px rgba(0,0,0,.35); }
+
+.summary-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+.summary-label{ font-size:12px; color:var(--muted); letter-spacing:.2px }
+.summary-year{ font-size:22px; font-weight:800; letter-spacing:.2px }
+.summary-close{
+  border:1px solid var(--grid); background:transparent; color:var(--fg);
+  border-radius:10px; width:28px; height:28px; cursor:pointer; line-height:1;
+}
+.summary-row{ display:grid; grid-template-columns:120px 1fr; gap:10px; align-items:start }
+.summary-box{ border:1px dashed var(--grid); border-radius:10px; padding:8px }
+.summary-gti{ font-size:24px; font-weight:800 }
+.summary-text{ font-size:14px; line-height:1.35 }
+.summary-ai{
+  border-top:1px solid var(--grid); margin-top:10px; padding-top:8px;
+  font-size:14px; line-height:1.35;
+}
+@media (max-width:720px){
+  .summary-card{ left:12px; right:12px; bottom:12px; max-width:none }
+  .summary-row{ grid-template-columns:1fr; }
+}
