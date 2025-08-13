@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# updater.py — GTI daily with live Planetary, Sentiment, Entropy, Economic; clamp + smoothing.
+# updater.py — GTI daily with live Planetary, Economic, Public Health, Peace & Conflict, Sentiment, Entropy.
+# Includes daily move clamp + exponential smoothing + changelog entry.
 
 import json, os, datetime
 
@@ -26,7 +27,6 @@ WEIGHTS = {
 GTI_PATH        = os.path.join(DATA_DIR, 'gti.json')
 CATEGORIES_PATH = os.path.join(DATA_DIR, 'categories.json')
 CHANGELOG_PATH  = os.path.join(DATA_DIR, 'changelog.json')
-# ===========================================
 
 def load_json(path):
     with open(path) as f: return json.load(f)
@@ -43,8 +43,8 @@ def compute_weighted_raw(scores_0_100: dict) -> float:
 
 def apply_modifiers(raw_0_100: float, entropy: float, sentiment: float) -> float:
     entropy = clamp_0_100(entropy); sentiment = clamp_0_100(sentiment)
-    adjusted = raw_0_100 * (1.0 - (entropy/100.0)*BETA)
-    final = adjusted + (sentiment - 50.0)*GAMMA
+    adjusted = raw_0_100 * (1.0 - (entropy/100.0)*BETA)         # multiplicative drag
+    final    = adjusted + (sentiment - 50.0)*GAMMA              # additive boost
     return clamp_0_100(final)
 
 def append_changelog_entry(date_str, change_str, max_entries=365):
@@ -72,28 +72,32 @@ def main():
     scores = dict(cat_blob.get('scores', {}))
     mods   = dict(cat_blob.get('modifiers', {}))
 
-    # Live stubs
-    import planetary_live, sentiment_live, entropy_live, economic_live
-    planet_score       = float(planetary_live.get_score())
-    senti_score        = float(sentiment_live.get_score())
-    entropy_live_score = float(entropy_live.get_score())
-    econ_score         = float(economic_live.get_score())
+    # -------- Live stubs (0–100) --------
+    import planetary_live, economic_live, health_live, peace_live, sentiment_live, entropy_live
+    planet_score  = float(planetary_live.get_score())
+    econ_score    = float(economic_live.get_score())
+    health_score  = float(health_live.get_score())
+    peace_score   = float(peace_live.get_score())
+    senti_score   = float(sentiment_live.get_score())
+    entropy_score_live = float(entropy_live.get_score())
 
-    # Merge live scores
-    scores["Planetary Health"]    = planet_score
-    scores["Sentiment & Culture"] = senti_score
-    scores["Entropy Index"]       = entropy_live_score
-    scores["Economic Wellbeing"]  = econ_score
+    # Merge into categories
+    scores["Planetary Health"]         = planet_score
+    scores["Economic Wellbeing"]       = econ_score
+    scores["Public Health"]            = health_score
+    scores["Global Peace & Conflict"]  = peace_score
+    scores["Sentiment & Culture"]      = senti_score
+    scores["Entropy Index"]            = entropy_score_live
 
-    # Modifiers
-    entropy_mod   = float(mods.get("entropy", entropy_live_score))
+    # Modifiers (prefer live entropy; sentiment mod defaults to sentiment score)
+    entropy_mod   = float(mods.get("entropy", entropy_score_live))
     sentiment_mod = float(mods.get("sentiment", senti_score))
 
-    # GTI calc
-    raw = compute_weighted_raw(scores)
-    final_0_100   = apply_modifiers(raw, entropy_mod, sentiment_mod)
-    proposed_delta= (final_0_100 - 50.0) * ALPHA
-    clamped_delta = clamp_abs(proposed_delta, MAX_DAILY_MOVE)
+    # ---- GTI computation ----
+    raw          = compute_weighted_raw(scores)
+    final_0_100  = apply_modifiers(raw, entropy_mod, sentiment_mod)
+    proposed_delta = (final_0_100 - 50.0) * ALPHA
+    clamped_delta  = clamp_abs(proposed_delta, MAX_DAILY_MOVE)
 
     last_val   = float(series[-1]['gti'])
     target_val = clamp_floor(last_val + clamped_delta, MIN_FLOOR)
@@ -110,11 +114,12 @@ def main():
     gti_blob['updated'] = now_iso
     save_json(GTI_PATH, gti_blob)
 
-    # Change log
+    # Changelog
     date_str = now_iso.split('T')[0]
-    change_str = (f"Econ={econ_score:.1f}, Planetary={planet_score:.1f}, Sentiment={senti_score:.1f}, "
-                  f"Entropy={entropy_live_score:.1f} → RAW={raw:.1f}, FINAL={final_0_100:.1f}, "
-                  f"Δ_prop={proposed_delta:.1f}, Δ_clamp={clamped_delta:.1f}, Index={smoothed:.1f}")
+    change_str = (f"Econ={econ_score:.1f}, Planetary={planet_score:.1f}, Health={health_score:.1f}, "
+                  f"Peace={peace_score:.1f}, Sentiment={senti_score:.1f}, Entropy={entropy_score_live:.1f} | "
+                  f"RAW={raw:.1f}, FINAL={final_0_100:.1f}, Δ_prop={proposed_delta:.1f}, "
+                  f"Δ_clamp={clamped_delta:.1f}, Index={smoothed:.1f}")
     append_changelog_entry(date_str, change_str)
 
     print(change_str)
