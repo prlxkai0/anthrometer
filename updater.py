@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Updater — builds categories, evolves GTI, and writes status.json for live UI.
-"""
 import json, datetime
 from pathlib import Path
 
@@ -12,7 +9,6 @@ DATA.mkdir(exist_ok=True); LIVE.mkdir(parents=True, exist_ok=True)
 
 GTI_PATH = DATA / "gti.json"
 CAT_PATH = DATA / "categories.json"
-SRC_PATH = DATA / "sources.json"     # assumed present
 CL_PATH  = DATA / "changelog.json"
 STATUS_PATH = DATA / "status.json"
 
@@ -29,7 +25,6 @@ DEFAULT_WEIGHTS = {
     "Sentiment & Culture": 0.08,
     "Entropy Index": 0.04
 }
-
 START_YEAR = 1900
 START_VALUE = 300.0
 ZERO_FLOOR = 0.0
@@ -42,30 +37,28 @@ def load_json(p: Path, default):
 
 def clamp(x, lo, hi): return max(lo, min(hi, x))
 
-def read_live(name, default_score=50.0):
-    obj = load_json(LIVE/f"{name}.json", {})
-    score = float(obj.get("score", default_score))
-    return clamp(score,0.0,100.0), obj
+def read_live(name, default=None):
+    return load_json(LIVE/f"{name}.json", default or {})
 
 def compute_categories():
-    planetary_score, planetary_raw = read_live("planetary", 55.0)
-    sentiment_score, sentiment_raw = read_live("sentiment", 50.0)
+    planetary  = read_live("planetary", {"score":55.0})
+    sentiment  = read_live("sentiment", {"score":50.0})
+    markets    = read_live("markets",   {"econ_score":60.0, "entropy_score":60.0})
+
     scores = {
-        "Planetary Health": planetary_score,
-        "Economic Wellbeing": 60.0,
-        "Global Peace & Conflict": 55.0,
-        "Public Health": 65.0,
-        "Civic Freedom & Rights": 62.0,
-        "Technological Progress": 70.0,
-        "Sentiment & Culture": sentiment_score,
-        "Entropy Index": 55.0
+        "Planetary Health": float(planetary.get("score", 55.0)),
+        "Economic Wellbeing": float(markets.get("econ_score", 60.0)),
+        "Global Peace & Conflict": 55.0,   # will wire later
+        "Public Health": 65.0,             # will wire later
+        "Civic Freedom & Rights": 62.0,    # will wire later
+        "Technological Progress": 70.0,    # will wire later
+        "Sentiment & Culture": float(sentiment.get("score", 50.0)),
+        "Entropy Index": float(markets.get("entropy_score", 60.0))
     }
-    return scores, {"planetary":planetary_raw, "sentiment":sentiment_raw}
+    return scores, {"planetary":planetary, "sentiment":sentiment, "markets":markets}
 
 def write_categories(scores):
-    obj = {"updated": UTCNOW, "scores": scores}
-    CAT_PATH.write_text(json.dumps(obj, indent=2))
-    return obj
+    CAT_PATH.write_text(json.dumps({"updated":UTCNOW, "scores":scores}, indent=2))
 
 def ensure_gti_series():
     gti = load_json(GTI_PATH, {"updated":UTCNOW, "series":[]})
@@ -78,10 +71,10 @@ def ensure_gti_series():
     return gti
 
 def update_today_point(gti_obj, cat_scores):
-    weights = DEFAULT_WEIGHTS
-    base = sum(weights[k] * clamp(cat_scores.get(k,50.0),0.0,100.0) for k in weights)
-    entropy = clamp(cat_scores.get("Entropy Index", 55.0),0.0,100.0)
-    drag = 0.98 + 0.02 * (entropy/100.0)
+    w = DEFAULT_WEIGHTS
+    base = sum(w[k] * clamp(cat_scores.get(k,50.0), 0.0, 100.0) for k in w)
+    entropy = clamp(cat_scores.get("Entropy Index", 55.0), 0.0, 100.0)
+    drag = 0.98 + 0.02 * (entropy / 100.0)
     series = gti_obj["series"]
     last = series[-1]["gti"] if series else START_VALUE
     growth = 1.000 + ((base - 50.0)/50.0) * 0.002
@@ -99,8 +92,7 @@ def append_changelog(change_str):
     cl["entries"].append({"date": ts, "change": change_str})
     CL_PATH.write_text(json.dumps(cl, indent=2))
 
-def write_status(gti_obj, raw_inputs):
-    # build 30-day avg for KPI delta (approx using last 30 points if available)
+def write_status(gti_obj, raw):
     series = gti_obj["series"]
     last = series[-1]["gti"] if series else None
     window = [p["gti"] for p in series[-30:]] if len(series)>=2 else []
@@ -110,27 +102,36 @@ def write_status(gti_obj, raw_inputs):
         "gti_last": last,
         "gti_30d_avg": round(avg30,2),
         "planetary": {
-          "co2_ppm": raw_inputs.get("planetary",{}).get("co2_ppm"),
-          "gistemp_anom_c": raw_inputs.get("planetary",{}).get("gistemp_anom_c"),
-          "delta_ppm": raw_inputs.get("planetary",{}).get("delta_ppm"),
-          "delta_anom": raw_inputs.get("planetary",{}).get("delta_anom"),
+          "co2_ppm": raw.get("planetary",{}).get("co2_ppm"),
+          "gistemp_anom_c": raw.get("planetary",{}).get("gistemp_anom_c"),
+          "delta_ppm": raw.get("planetary",{}).get("delta_ppm"),
+          "delta_anom": raw.get("planetary",{}).get("delta_anom"),
         },
         "sentiment": {
-          "avg_tone_30d": raw_inputs.get("sentiment",{}).get("avg_tone_30d"),
-          "delta_tone": raw_inputs.get("sentiment",{}).get("delta_tone"),
+          "avg_tone_30d": raw.get("sentiment",{}).get("avg_tone_30d"),
+          "delta_tone": raw.get("sentiment",{}).get("delta_tone"),
         },
-        "note": "Auto-refreshed every 60s; deltas vs recent baselines."
+        "markets": {
+          "acwi_last": raw.get("markets",{}).get("acwi",{}).get("last"),
+          "acwi_ret30": raw.get("markets",{}).get("acwi",{}).get("ret30"),
+          "vix": raw.get("markets",{}).get("vix",{}).get("last"),
+          "brent_last": raw.get("markets",{}).get("brent",{}).get("last"),
+          "brent_vol30": raw.get("markets",{}).get("brent",{}).get("vol30"),
+          "econ_score": raw.get("markets",{}).get("econ_score"),
+          "entropy_score": raw.get("markets",{}).get("entropy_score"),
+        },
+        "note": "Signals compare to recent baselines. Lower VIX/volatility = more ordered (higher Entropy score)."
     }
     STATUS_PATH.write_text(json.dumps(status, indent=2))
 
 def main():
-    scores, raw_inputs = compute_categories()
+    scores, raw = compute_categories()
     write_categories(scores)
     gti = ensure_gti_series()
     gti = update_today_point(gti, scores)
     GTI_PATH.write_text(json.dumps(gti, indent=2))
-    write_status(gti, raw_inputs)
-    append_changelog(f"Daily update. Planetary={scores['Planetary Health']}, Sentiment={scores['Sentiment & Culture']}.")
+    write_status(gti, raw)
+    append_changelog(f"Daily update. Econ={scores['Economic Wellbeing']}, Entropy={scores['Entropy Index']}.")
     print("Updated:", UTCNOW, "Last GTI:", gti['series'][-1])
 
 if __name__ == "__main__":
