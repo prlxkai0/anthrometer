@@ -1,4 +1,4 @@
-// script.js — AnthroMeter front-end (with floating Year Summary + auto-hide + defensive rendering)
+// script.js — AnthroMeter front-end (KPI card + cleaner change log + floating Year Summary autohide)
 document.addEventListener('DOMContentLoaded', () => {
   // --------- Endpoints (cache-busted) ----------
   const bust = Date.now();
@@ -10,9 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const sumUrl    = `./data/summaries.json?t=${bust}`;
 
   // --------- DOM refs ----------
+  // (Old header status — still set for safety but hidden via CSS)
   const elUpdated = document.getElementById('updated');
   const elCY = document.getElementById('current-year');
   const elCV = document.getElementById('current-gti');
+
+  // KPI card (Overview)
+  const kpiYear = document.getElementById('kpi-year');
+  const kpiGTI  = document.getElementById('kpi-gti');
+  const kpiUpd  = document.getElementById('kpi-updated');
 
   // Controls (Overview tab)
   const selColor  = document.getElementById('line-color');
@@ -106,8 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const years = GTI_SERIES.map(d => d.year);
     const vals  = GTI_SERIES.map(d => d.gti);
     const lastIdx = years.length - 1;
-    if (elCY) elCY.textContent = years[lastIdx] != null ? years[lastIdx] : '—';
-    if (elCV) elCV.textContent = vals[lastIdx]  != null ? Math.round(vals[lastIdx]) : '—';
+    const lastYear = years[lastIdx];
+    const lastVal = vals[lastIdx];
+
+    // Update header (hidden) and KPI card (visible)
+    if (elCY) elCY.textContent = lastYear != null ? lastYear : '—';
+    if (elCV) elCV.textContent = lastVal  != null ? Math.round(lastVal) : '—';
+    if (kpiYear) kpiYear.textContent = elCY.textContent;
+    if (kpiGTI)  kpiGTI.textContent  = elCV.textContent;
 
     // styling
     const colorMap = { blue:'#2563eb', green:'#059669', purple:'#7c3aed', orange:'#ea580c', red:'#dc2626' };
@@ -184,6 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCategories(cats){
     if (!cats) return;
     CATS = cats;
+
+    // also mirror KPI updated time here if present
+    if (kpiUpd && cats.updated) kpiUpd.textContent = new Date(cats.updated).toUTCString();
+
     const order = [
       "Planetary Health","Economic Wellbeing","Global Peace & Conflict",
       "Public Health","Civic Freedom & Rights","Technological Progress",
@@ -225,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rows = (src.sources || []).map(s =>
         `<tr><td>${s.category}</td><td><a href="${s.link}" target="_blank" rel="noopener">${s.name}</a></td><td>${s.notes || ''}</td></tr>`
       ).join('');
-      listEl.innerHTML = `<table><thead><tr><th>Category</th><th>Source</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`;
+      listEl.innerHTML = `<table><tbody>${rows}</tbody></table>`;
     }
     if (methEl) {
       methEl.innerHTML = `<ul class="bullets">${(src.methodology || []).map(m => `<li>${m}</li>`).join('')}</ul>`;
@@ -235,8 +251,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderChangelog(cl){
     const listEl = document.getElementById('changelog-list');
     if (!cl || !listEl) return;
-    const rows = (cl.entries || []).map(e => `<tr><td>${e.date}</td><td>${e.change}</td></tr>`).join('');
-    listEl.innerHTML = `<table><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>`;
+    const rows = (cl.entries || []).map(e =>
+      `<li><div class="cl-date">${e.date}</div><div class="cl-change">${e.change}</div></li>`
+    ).join('');
+    listEl.innerHTML = `<ul>${rows}</ul>`;
   }
 
   // --------- Bind controls & init values ----------
@@ -292,7 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
       getJSON(sumUrl).catch(() => ({}))
     ]);
 
-    if (elUpdated && gti && gti.updated) elUpdated.textContent = new Date(gti.updated).toUTCString();
+    // Updated timestamps → header + KPI
+    if (gti && gti.updated) {
+      const ts = new Date(gti.updated).toUTCString();
+      if (elUpdated) elUpdated.textContent = ts;
+      if (kpiUpd)    kpiUpd.textContent    = ts;
+    }
+
     GTI_SERIES = (gti && gti.series) ? gti.series : [];
     EVENTS     = evMap || {};
     SUMMARIES  = smap || {};
