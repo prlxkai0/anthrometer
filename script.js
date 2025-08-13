@@ -54,6 +54,30 @@ document.addEventListener('DOMContentLoaded', () => {
     return undefined; // all
   }
 
+    function renderLegend(cats){
+    const el = document.getElementById('year-summary'); // reuse the card area below chart
+    if (!el || !cats || !cats.scores) return;
+    // Create a compact UL at the bottom of this card
+    const order = [
+      "Planetary Health","Economic Wellbeing","Global Peace & Conflict",
+      "Public Health","Civic Freedom & Rights","Technological Progress",
+      "Sentiment & Culture","Entropy Index"
+    ];
+    const items = order.map(k => {
+      const v = (typeof cats.scores[k] === 'number') ? Math.round(cats.scores[k]) : '—';
+      return `<li style="display:inline-block;margin:4px 10px 0 0;color:var(--muted)">${k}: <strong style="color:var(--fg)">${v}</strong></li>`;
+    }).join('');
+    const legend = `<ul style="list-style:none;padding:0;margin:8px 0 0">${items}</ul>`;
+    // Append (don’t replace year summary content)
+    const id = 'legend-inline';
+    let div = document.getElementById(id);
+    if (!div){
+      div = document.createElement('div'); div.id = id; el.appendChild(div);
+    }
+    div.innerHTML = legend;
+    el.style.display = 'block';
+  }
+  
   function plotLine(){
     if (!Array.isArray(GTI_SERIES) || GTI_SERIES.length === 0) return;
     const years = GTI_SERIES.map(d=>d.year);
