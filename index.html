@@ -9,21 +9,38 @@
 </head>
 <body>
   <main class="container">
-    <header>
-      <h1>AnthroMeter <span class="muted">/ Good Times Index</span></h1>
-      <p class="sub">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</p>
-      <p class="updated">Last updated: <span id="updated">—</span></p>
-    </header>
+  <header>
+    <h1>AnthroMeter <span class="muted">/ Good Times Index</span></h1>
+    <p class="sub">Start=300 • Soft floor=100 • Unbounded • Daily-updating</p>
+    <p class="updated">Last updated: <span id="updated">—</span></p>
+    <div id="current" class="current">
+      <div><span class="label">Current GTI</span><span id="current-gti" class="value">—</span></div>
+      <div><span class="label">Year</span><span id="current-year" class="value">—</span></div>
+    </div>
+  </header>
 
-    <section id="chart"></section>
+  <section id="chart" class="card"></section>
 
-    <footer>
-      <p class="small">
-        Prototype for private testing. Current data is synthetic to validate visuals & pipeline.
-      </p>
-    </footer>
-  </main>
+  <section class="grid two">
+    <div class="card">
+      <h2 class="h2">Category Breakdown</h2>
+      <div id="category-bars"></div>
+      <div id="category-table" class="table-wrap"></div>
+    </div>
+    <div class="card">
+      <h2 class="h2">Method Snapshot</h2>
+      <ul class="bullets">
+        <li>Weighted hybrid model (planet + people)</li>
+        <li>Entropy = drag · Sentiment = boost</li>
+        <li>Scores 0–100; Index line is unbounded (floor=100)</li>
+      </ul>
+    </div>
+  </section>
 
-  <script type="module" src="script.js"></script>
-</body>
-</html>
+  <footer>
+    <p class="small">Prototype for private testing. Scores are synthetic for now.</p>
+  </footer>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="script.js" defer></script>
