@@ -2,7 +2,7 @@ name: Update Daily GTI
 
 on:
   schedule:
-    - cron: "20 2 * * *"
+    - cron: "20 2 * * *"   # 02:20 UTC daily
   workflow_dispatch:
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      # ---- Fetchers (must be in repo root) ----
+      # ---- Fetchers (repo root) ----
       - name: Fetch Planetary Health
         run: python fetch_planetary.py
 
@@ -47,7 +47,7 @@ jobs:
       - name: Update GTI
         run: python updater.py
 
-      # ---- Diagnostics: show files + print JSON heads ----
+      # ---- Diagnostics: show files + print JSON ----
       - name: Show generated files
         run: |
           echo "=== data ==="; ls -la data
@@ -56,27 +56,6 @@ jobs:
           echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then cat data/live/planetary.json; else echo "planetary.json MISSING"; fi
           echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then cat data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
           echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then cat data/live/markets.json; else echo "markets.json MISSING"; fi
-
-            # ---- FORCE status.json for one run (diagnostic) ----
-      - name: FORCE status.json (diagnostic)
-        run: |
-          python - <<'PY'
-          import json, time, pathlib
-          p = pathlib.Path('data/status.json')
-          now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-          force = {
-            "updated_iso": now,
-            "gti_last": 3123.45,
-            "gti_30d_avg": 3099.99,
-            "planetary": { "co2_ppm": 421.23, "gistemp_anom_c": 1.11, "delta_ppm": 0.23, "delta_anom": 0.01 },
-            "sentiment": { "avg_tone_30d": -0.85, "delta_tone": 0.12 },
-            "markets":   { "acwi_last": 101.23, "acwi_ret30": 0.0133, "vix": 14.72, "brent_last": 79.80, "brent_vol30": 0.0211, "econ_score": 62.5, "entropy_score": 71.0 },
-            "note": "FORCED DIAGNOSTIC PAYLOAD"
-          }
-          p.write_text(json.dumps(force, indent=2))
-          print("WROTE FORCED status.json")
-          print(p.read_text())
-          PY
 
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
