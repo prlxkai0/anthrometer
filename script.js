@@ -205,46 +205,54 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ const panel=document.getElementById('year-summary'); if(panel&&panel.style.display!=='none'){ panel.style.display='none'; if(ysTimer) clearTimeout(ysTimer); }}});
 
-  function renderSignals(status){
-    if(!status) return;
-    try{
-      if(status.updated_iso){
-        const t=new Date(status.updated_iso).toUTCString();
-        kpiUpd && (kpiUpd.textContent=t);
-        liveAgo && (liveAgo.textContent=`updated ${humanAgo(Date.now()-new Date(status.updated_iso).getTime())}`);
-      }
-      const last=nOr(status.gti_last,null), avg=nOr(status.gti_30d_avg,null);
-      if(last!==null && avg!==null && kpiDelta){
-        const pct = avg ? ((last-avg)/avg)*100 : 0;
-        kpiDelta.textContent = `${pct.toFixed(2)}% vs 30d`;
-      }
-    }catch{}
-    const ul=document.getElementById('signals-list'); if(!ul) return;
-    const items=[];
-    try{
-      if(status.planetary){
-        items.push(`<li><span class="sig-name">CO₂ (ppm)</span><span class="sig-val">${fmtN(status.planetary.co2_ppm,2)}</span></li>`);
-        items.push(`<li><span class="sig-name">Temp anomaly (°C)</span><span class="sig-val">${fmtN(status.planetary.gistemp_anom_c,2)}</span></li>`);
-      }
-      if(status.food){
-        const mom = (status.food.fpi_mom==null) ? '—' : fmtN(status.food.fpi_mom,2);
-        items.push(`<li><span class="sig-name">Food price index</span><span class="sig-val">${fmtN(status.food.fpi_last,2)} (${mom} m/m)</span></li>`);
-      }
-      if(status.sentiment){
-        items.push(`<li><span class="sig-name">News tone (30d avg)</span><span class="sig-val">${fmtN(status.sentiment.avg_tone_30d,2)}</span></li>`);
-      }
-      if(status.conflict){
-        const d30 = (status.conflict.delta_30==null) ? '—' : fmtN(status.conflict.delta_30,2);
-        items.push(`<li><span class="sig-name">Conflict pulse (30d)</span><span class="sig-val">${fmtN(status.conflict.avg_last30,2)} (${d30} vs prev 30d)</span></li>`);
-      }
-      if(status.markets){
-        items.push(`<li><span class="sig-name">ACWI (30d return)</span><span class="sig-val">${(nOr(status.markets.acwi_ret30,0)*100).toFixed(2)}%</span></li>`);
-        items.push(`<li><span class="sig-name">VIX (level)</span><span class="sig-val">${fmtN(status.markets.vix,2)}</span></li>`);
-        items.push(`<li><span class="sig-name">Brent 30d vol</span><span class="sig-val">${(nOr(status.markets.brent_vol30,0)*100).toFixed(2)}%</span></li>`);
-      }
-      ul.innerHTML = items.join('');
-    }catch{}
-  }
+ function renderSignals(status){
+  if(!status) return;
+  try{
+    if(status.updated_iso){
+      const t=new Date(status.updated_iso).toUTCString();
+      kpiUpd && (kpiUpd.textContent=t);
+      liveAgo && (liveAgo.textContent=`updated ${humanAgo(Date.now()-new Date(status.updated_iso).getTime())}`);
+    }
+    const last=nOr(status.gti_last,null), avg=nOr(status.gti_30d_avg,null);
+    if(last!==null && avg!==null && kpiDelta){
+      const pct = avg ? ((last-avg)/avg)*100 : 0;
+      kpiDelta.textContent = `${pct.toFixed(2)}% vs 30d`;
+    }
+  }catch{}
+  const ul=document.getElementById('signals-list'); if(!ul) return;
+  const items=[];
+  try{
+    if(status.planetary){
+      items.push(`<li><span class="sig-name">CO₂ (ppm)</span><span class="sig-val">${fmtN(status.planetary.co2_ppm,2)}</span></li>`);
+      items.push(`<li><span class="sig-name">Temp anomaly (°C)</span><span class="sig-val">${fmtN(status.planetary.gistemp_anom_c,2)}</span></li>`);
+    }
+    if(status.food){
+      const mom = (status.food.fpi_mom==null) ? '—' : fmtN(status.food.fpi_mom,2);
+      items.push(`<li><span class="sig-name">Food price index</span><span class="sig-val">${fmtN(status.food.fpi_last,2)} (${mom} m/m)</span></li>`);
+    }
+    if(status.food_access){
+      const d = (status.food_access.delta_pct==null) ? '—' : fmtN(status.food_access.delta_pct,2);
+      items.push(`<li><span class="sig-name">Undernourished (World)</span><span class="sig-val">${fmtN(status.food_access.undernourished_pct,2)}% (${d} Δ)</span></li>`);
+    }
+    if(status.employment){
+      const d = (status.employment.delta_pct==null) ? '—' : fmtN(status.employment.delta_pct,2);
+      items.push(`<li><span class="sig-name">Unemployment (World)</span><span class="sig-val">${fmtN(status.employment.unemployment_rate,2)}% (${d} Δ)</span></li>`);
+    }
+    if(status.sentiment){
+      items.push(`<li><span class="sig-name">News tone (30d avg)</span><span class="sig-val">${fmtN(status.sentiment.avg_tone_30d,2)}</span></li>`);
+    }
+    if(status.conflict){
+      const d30 = (status.conflict.delta_30==null) ? '—' : fmtN(status.conflict.delta_30,2);
+      items.push(`<li><span class="sig-name">Conflict pulse (30d)</span><span class="sig-val">${fmtN(status.conflict.avg_last30,2)} (${d30} vs prev 30d)</span></li>`);
+    }
+    if(status.markets){
+      items.push(`<li><span class="sig-name">ACWI (30d return)</span><span class="sig-val">${(nOr(status.markets.acwi_ret30,0)*100).toFixed(2)}%</span></li>`);
+      items.push(`<li><span class="sig-name">VIX (level)</span><span class="sig-val">${fmtN(status.markets.vix,2)}</span></li>`);
+      items.push(`<li><span class="sig-name">Brent 30d vol</span><span class="sig-val">${(nOr(status.markets.brent_vol30,0)*100).toFixed(2)}%</span></li>`);
+    }
+    ul.innerHTML = items.join('');
+  }catch{}
+}
 
   function renderCategories(cats){
     if(!cats) return;
