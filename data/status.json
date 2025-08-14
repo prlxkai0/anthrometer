@@ -1,25 +1,36 @@
 {
-  "updated_iso": "2025-08-14T17:35:59.152625Z",
+  "updated_iso": "2025-08-14T18:14:06Z",
   "gti_last": 2804.13,
   "gti_30d_avg": 2332.45,
   "planetary": {
-    "co2_ppm": 421.23,
-    "gistemp_anom_c": 1.11,
-    "delta_ppm": 0.23,
-    "delta_anom": 0.01
+    "co2_ppm": null,
+    "gistemp_anom_c": null,
+    "delta_ppm": null,
+    "delta_anom": null
   },
   "sentiment": {
-    "avg_tone_30d": -0.85,
-    "delta_tone": 0.12
+    "avg_tone_30d": null,
+    "delta_tone": null
   },
   "markets": {
-    "acwi_last": 101.23,
-    "acwi_ret30": 0.0133,
-    "vix": 14.72,
-    "brent_last": 79.8,
-    "brent_vol30": 0.0211,
-    "econ_score": 62.5,
-    "entropy_score": 71.0
+    "acwi_last": null,
+    "acwi_ret30": null,
+    "vix": null,
+    "brent_last": null,
+    "brent_vol30": null,
+    "econ_score": null,
+    "entropy_score": null
   },
-  "note": "Auto-refreshed; values coalesced from latest available data (schema-agnostic)."
+  "food": {
+    "fpi_last": null,
+    "fpi_mom": null,
+    "fpi_yoy": null
+  },
+  "conflict": {
+    "last_val": null,
+    "avg_last30": null,
+    "avg_prev30": null,
+    "delta_30": null
+  },
+  "note": "Status composed from live inputs; nulls indicate missing feed this run."
 }
