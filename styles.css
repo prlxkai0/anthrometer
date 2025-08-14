@@ -7,46 +7,47 @@
   --muted:#e5e7eb;      /* borders */
   --muted-text:#6b7280; /* secondary text */
   --accent:#2563eb;     /* blue */
-  --grid:#eef2f7;       /* chart grid */
+  --grid:#e9edf3;       /* chart grid */
 }
 
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:var(--bg);color:var(--fg);}
-
-/* Centered container (prevents full-bleed stretch) */
-.container{
-  max-width:1080px;
-  margin:0 auto;
-  padding:12px 16px 28px;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+  background:var(--bg); color:var(--fg);
 }
 
-/* === Top bar === */
+/* Centered container */
+.container{ max-width:1080px; margin:0 auto; padding:12px 16px 28px; }
+
+/* Top bar */
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--muted);}
 .brandline{margin:0;font-size:18px}
 .brand{font-weight:800}
 .slash{opacity:.7}
-.subtitle{font-weight:500;opacity:.9}
+.subtitle{font-weight:600;opacity:.9}
 .top-actions{display:flex;gap:12px;align-items:center}
 .switch{display:inline-flex;gap:6px;align-items:center;font-size:14px}
 .live{font-size:12px;opacity:.75}
 
-/* === KPIs === */
+/* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:12px 0}
 .kpi{background:var(--card);border:1px solid var(--muted);border-radius:12px;padding:12px}
 .kpi-label{font-size:12px;color:var(--muted-text)}
 .kpi-val{font-size:24px;font-weight:800}
 .kpi-val.small{font-size:13px;font-weight:600}
 
-/* === Tabs === */
+/* Tabs */
 .tabs{display:flex;gap:8px;padding:4px 0 0}
 .tab{padding:8px 10px;border-radius:10px;text-decoration:none;color:var(--fg);border:1px solid var(--muted);background:var(--card)}
 .tab.active{outline:2px solid var(--accent); outline-offset:0}
 
-/* === Main === */
+/* Main */
 main{padding-top:12px}
 .tabpanel{display:none}
 .tabpanel.active{display:block}
 
-/* === Controls === */
+/* Controls */
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
 .controls label{font-size:12px;color:var(--muted-text)}
 .controls select,.controls button{
@@ -54,10 +55,10 @@ main{padding-top:12px}
 }
 .controls button{cursor:pointer}
 
-/* === Chart === */
+/* Chart */
 .chart{background:var(--card);border:1px solid var(--muted);border-radius:14px;min-height:420px;padding:6px}
 
-/* === Signals === */
+/* Signals */
 .signals{margin-top:12px;background:var(--card);border:1px solid var(--muted);border-radius:14px;padding:10px 12px}
 .signals h3{margin:0 0 6px 0}
 #signals-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;list-style:none;padding:0;margin:0}
@@ -66,23 +67,23 @@ main{padding-top:12px}
 .sig-val{font-weight:800}
 .muted{color:var(--muted-text);font-size:12px;margin-top:6px}
 
-/* === Details === */
+/* Details */
 .table table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--muted);border-radius:12px;overflow:hidden}
 .table th,.table td{border-bottom:1px solid var(--muted);padding:10px 8px;text-align:left}
 .table thead th{background:#f3f6fb;color:#334155}
 .bars{margin-bottom:14px}
 
-/* === Year summary popover === */
+/* Year summary popover */
 .ys{position:fixed;right:24px;bottom:24px;background:var(--card);border:1px solid var(--muted);border-radius:14px;padding:12px 14px;width:340px;box-shadow:0 12px 30px rgba(0,0,0,.10);z-index:50}
 .ys .close{position:absolute;right:8px;top:8px;background:transparent;color:var(--fg);border:0;font-size:18px;cursor:pointer}
 .ys-title{font-weight:800;margin-bottom:6px}
 .ys-hover{font-size:12px;color:var(--muted-text);margin-bottom:6px}
 .ys-ai{font-size:13px}
 
-/* Warn box (fallback states) */
+/* Warn */
 .warn{padding:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px}
 
-/* === Dark mode === */
+/* Dark mode palette */
 body.dark{
   --bg:#0b1320;
   --fg:#e5e7eb;
@@ -93,7 +94,7 @@ body.dark{
   --grid:#1f2937;
 }
 
-/* === Responsive === */
+/* Responsive */
 @media (max-width:900px){
   #signals-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
