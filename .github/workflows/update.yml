@@ -1,15 +1,9 @@
-      - name: Fetch Food Access
-        run: python fetch_foodaccess.py
-
-      - name: Fetch Employment
-        run: python fetch_employment.py
-
 name: Update Daily GTI
 
 on:
   schedule:
     - cron: "20 2 * * *"   # 02:20 UTC daily
-  workflow_dispatch:       # <-- enables the manual "Run workflow" button in Actions
+  workflow_dispatch: {}     # <-- enables the manual "Run workflow" button
 
 jobs:
   build:
@@ -37,19 +31,29 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install pandas requests
+          pip install pandas numpy requests
 
       # ---- Live fetchers ----
       - name: Fetch Planetary Health
         run: python fetch_planetary.py
+
       - name: Fetch Global Sentiment
         run: python fetch_sentiment.py
+
       - name: Fetch Markets
         run: python fetch_markets.py
+
       - name: Fetch Food Price Index
         run: python fetch_food.py
+
       - name: Fetch Conflict Pulse
         run: python fetch_conflict.py
+
+      - name: Fetch Food Access
+        run: python fetch_foodaccess.py
+
+      - name: Fetch Employment
+        run: python fetch_employment.py
 
       # ---- Compose status.json + keep gti.json ----
       - name: Update GTI
@@ -68,7 +72,6 @@ jobs:
           echo "=== conflict.json ==="; if [ -f data/live/conflict.json ]; then head -n 80 data/live/conflict.json; else echo "conflict.json MISSING"; fi
           echo "=== foodaccess.json ==="; if [ -f data/live/foodaccess.json ]; then head -n 80 data/live/foodaccess.json; else echo "foodaccess.json MISSING"; fi
           echo "=== employment.json ==="; if [ -f data/live/employment.json ]; then head -n 80 data/live/employment.json; else echo "employment.json MISSING"; fi
-
 
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
