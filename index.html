@@ -1,204 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AnthroMeter / Good Times Index</title>
-  <link rel="stylesheet" href="./styles.css?v=9" />
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <link rel="stylesheet" href="./styles.css?v=reset1" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script src="./script.js?v=reset1" defer></script>
 </head>
 <body>
-  <header class="container">
-    <h1>
-      <span style="font-weight:700;">AnthroMeter&nbsp;/</span>
-      <span style="font-weight:400;">&nbsp;Good Times Index</span>
-    </h1>
-    <div class="meta">Start=300 • Soft floor= 100 • Unbounded • Daily-updating</div>
-
-    <!-- Hidden legacy status (still populated) -->
-    <div class="status">
-      <span><strong>Current GTI</strong> <span id="current-gti">—</span></span>
-      <span><strong>Year</strong> <span id="current-year">—</span></span>
-      <span><strong>Last updated</strong> <span id="updated">—</span></span>
-    </div>
-
-    <!-- LIVE strip -->
-    <div id="live-strip" class="live">
-      <span class="dot"></span>
-      <span class="live-text">LIVE</span>
-      <span class="sep">•</span>
-      <span id="live-ago" class="ago">updated —</span>
-      <label class="auto-refresh">
-        <input type="checkbox" id="auto-refresh" checked />
-        Auto-refresh
+  <header class="topbar">
+    <h1><span class="brand">AnthroMeter</span><span class="slash"> / </span><span class="light">Good Times Index</span></h1>
+    <div class="top-actions">
+      <label class="switch">
+        <input id="dark-mode" type="checkbox" />
+        <span>Dark</span>
       </label>
+      <label class="switch">
+        <input id="auto-refresh" type="checkbox" checked />
+        <span>Auto‑refresh</span>
+      </label>
+      <span id="live-ago" class="live">updated —</span>
     </div>
   </header>
 
-  <main class="container">
-    <nav class="tabs">
-      <a class="tab active" data-tab="overview">Overview</a>
-      <a class="tab" data-tab="details">Details</a>
-      <a class="tab" data-tab="sources">Sources &amp; Methodology</a>
-      <a class="tab" data-tab="changelog">Change Log</a>
-    </nav>
+  <section class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Current GTI</div>
+      <div class="kpi-val" id="kpi-gti">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Year</div>
+      <div class="kpi-val" id="kpi-year">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">vs 30‑day avg</div>
+      <div class="kpi-val" id="kpi-delta">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Last updated</div>
+      <div class="kpi-val small" id="kpi-updated">—</div>
+    </div>
+  </section>
 
-    <!-- Overview -->
+  <nav class="tabs">
+    <a href="#" class="tab active" data-tab="overview">Overview</a>
+    <a href="#" class="tab" data-tab="details">Details</a>
+    <a href="#" class="tab" data-tab="sources">Sources & Methodology</a>
+  </nav>
+
+  <main>
     <section id="tab-overview" class="tabpanel active">
-
-      <!-- KPI card -->
-      <div class="kpi card" id="kpi">
-        <div class="kpi-row">
-          <div class="kpi-item">
-            <div class="kpi-label">Current GTI</div>
-            <div class="kpi-value" id="kpi-gti">—</div>
-            <div class="kpi-delta" id="kpi-delta">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-label">Year</div>
-            <div class="kpi-value" id="kpi-year">—</div>
-          </div>
-          <div class="kpi-item wide">
-            <div class="kpi-label">Last updated</div>
-            <div class="kpi-sub" id="kpi-updated">—</div>
-          </div>
-        </div>
+      <div class="controls">
+        <label>Line color
+          <select id="line-color">
+            <option value="auto">Auto</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+            <option value="purple">Purple</option>
+            <option value="orange">Orange</option>
+            <option value="red">Red</option>
+          </select>
+        </label>
+        <label>Line weight
+          <select id="line-weight">
+            <option>2</option><option selected>3</option><option>4</option><option>5</option>
+          </select>
+        </label>
+        <label>Range
+          <select id="range-select">
+            <option value="all" selected>All</option>
+            <option value="20y">Last 20y</option>
+            <option value="decade">Last 10y</option>
+            <option value="5y">Last 5y</option>
+          </select>
+        </label>
+        <button id="btn-png">Export PNG</button>
+        <button id="btn-csv">Export CSV</button>
       </div>
 
-      <!-- Controls -->
-      <div class="controls card">
-        <div class="row">
-          <div class="group">
-            <label>Line color</label>
-            <select id="line-color">
-              <option value="auto">Auto</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="purple">Purple</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-            </select>
-          </div>
-          <div class="group">
-            <label>Line weight</label>
-            <select id="line-weight">
-              <option value="2">Thin</option>
-              <option value="3" selected>Normal</option>
-              <option value="5">Bold</option>
-            </select>
-          </div>
-          <div class="group">
-            <label>Quick range</label>
-            <select id="range-select">
-              <option value="all" selected>All (1900–present)</option>
-              <option value="decade">Past decade</option>
-              <option value="20y">Past 20 years</option>
-              <option value="5y">Past 5 years</option>
-            </select>
-          </div>
-          <div class="group toggle">
-            <label><input type="checkbox" id="dark-mode"> Dark mode</label>
-          </div>
-          <div class="group">
-            <label>&nbsp;</label>
-            <div>
-              <button id="btn-png" class="btn">Export PNG</button>
-              <button id="btn-csv" class="btn">Export CSV</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div id="chart-plot" class="chart">Loading…</div>
 
-      <!-- Chart + Signals -->
-      <section class="grid two">
-        <section class="card chart-card">
-          <div id="chart-plot"></div>
-
-          <!-- Floating Year Summary -->
-          <div id="year-summary" class="summary-card" aria-live="polite" style="display:none;">
-            <div class="summary-head">
-              <div>
-                <div class="summary-label">Year</div>
-                <div id="ys-year" class="summary-year">—</div>
-              </div>
-              <button id="ys-close" class="summary-close" type="button" aria-label="Close">✕</button>
-            </div>
-            <div class="summary-row">
-              <div class="summary-box">
-                <div class="summary-label">GTI</div>
-                <div id="ys-gti" class="summary-gti">—</div>
-              </div>
-              <div class="summary-box">
-                <div class="summary-label">Context</div>
-                <div id="ys-hover" class="summary-text">—</div>
-              </div>
-            </div>
-            <div class="summary-ai" id="ys-ai">Summary coming soon.</div>
-          </div>
-        </section>
-
-        <!-- Today’s Signals -->
-        <aside class="card signals">
-          <h2 class="h2">Today’s Signals</h2>
-          <ul id="signals-list" class="signals-list">
-            <!-- populated by script -->
-          </ul>
-          <div class="signals-foot" id="signals-foot">—</div>
-        </aside>
+      <section id="signals" class="signals">
+        <h3>Today’s Signals</h3>
+        <ul id="signals-list"></ul>
+        <div id="signals-foot" class="muted">—</div>
       </section>
+
+      <!-- Year summary (click on chart) -->
+      <div id="year-summary" class="ys" style="display:none;">
+        <button id="ys-close" class="close">×</button>
+        <div class="ys-title"><span id="ys-year">—</span> • GTI <span id="ys-gti">—</span></div>
+        <div class="ys-hover" id="ys-hover">—</div>
+        <div class="ys-ai" id="ys-ai">Summary coming soon.</div>
+      </div>
+
+      <!-- Debug tile (collapsible) -->
+      <details id="debug-tile">
+        <summary>Debug: status.json (click to expand)</summary>
+        <pre id="debug-pre"></pre>
+        <div class="muted"><a id="debug-link" href="./data/status.json" target="_blank" rel="noopener">Open raw status.json</a></div>
+      </details>
     </section>
 
-    <!-- Details -->
     <section id="tab-details" class="tabpanel">
-      <div class="card" id="details-guide">
-        <h2 class="h2">How to read these categories</h2>
-        <ul class="bullets">
-          <li><strong>Scale:</strong> Each category is scored <strong>0–100</strong> (higher = better).</li>
-          <li><strong>Weights:</strong> Categories contribute differently to the GTI.</li>
-          <li><strong>Modifiers:</strong> <em>Entropy</em> (drag) and <em>Sentiment</em> (mood) are applied.</li>
-          <li><strong>Updates:</strong> Some categories use live proxies; others are smoothed.</li>
-        </ul>
-      </div>
-
-      <div class="grid two">
-        <div class="card">
-          <h2 class="h2">Category Breakdown</h2>
-          <div id="category-bars" style="height:380px;"></div>
-        </div>
-        <div class="card">
-          <h2 class="h2">Scores (0–100)</h2>
-          <div id="category-table"></div>
-        </div>
-      </div>
+      <div id="category-bars" class="bars"></div>
+      <div id="category-table" class="table"></div>
     </section>
 
-    <!-- Sources -->
     <section id="tab-sources" class="tabpanel">
-      <div class="grid two">
-        <div class="card">
-          <h2 class="h2">Sources</h2>
-          <div id="sources-list"></div>
-        </div>
-        <div class="card">
-          <h2 class="h2">Methodology</h2>
-          <div id="methodology"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Change Log -->
-    <section id="tab-changelog" class="tabpanel">
-      <div class="card">
-        <h2 class="h2">Change Log</h2>
-        <div id="changelog-list"></div>
-      </div>
+      <div id="methodology"></div>
+      <div id="sources-list" class="table"></div>
     </section>
   </main>
 
-  <footer class="container muted">
-    <small>© AnthroMeter — Open prototype. No cookies beyond local display prefs.</small>
-  </footer>
-
-  <script src="./script.js?v=9"></script>
+  <!-- legacy header spans kept for compatibility (hidden) -->
+  <div style="display:none">
+    <span id="current-year"></span>
+    <span id="current-gti"></span>
+    <span id="updated"></span>
+  </div>
 </body>
 </html>
