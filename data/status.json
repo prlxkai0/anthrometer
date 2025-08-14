@@ -1,5 +1,5 @@
 {
-  "updated_iso": "2025-08-14T18:35:19Z",
+  "updated_iso": "2025-08-14T18:48:15Z",
   "gti_last": 2804.13,
   "gti_30d_avg": 2332.45,
   "planetary": {
@@ -8,9 +8,20 @@
     "delta_ppm": null,
     "delta_anom": null
   },
+  "food": {
+    "fpi_last": null,
+    "fpi_mom": null,
+    "fpi_yoy": null
+  },
   "sentiment": {
     "avg_tone_30d": null,
     "delta_tone": null
+  },
+  "conflict": {
+    "last_val": null,
+    "avg_last30": null,
+    "avg_prev30": null,
+    "delta_30": null
   },
   "markets": {
     "acwi_last": null,
@@ -21,16 +32,13 @@
     "econ_score": null,
     "entropy_score": null
   },
-  "food": {
-    "fpi_last": null,
-    "fpi_mom": null,
-    "fpi_yoy": null
+  "food_access": {
+    "undernourished_pct": null,
+    "delta_pct": null
   },
-  "conflict": {
-    "last_val": null,
-    "avg_last30": null,
-    "avg_prev30": null,
-    "delta_30": null
+  "employment": {
+    "unemployment_rate": 4.97,
+    "delta_pct": -0.3
   },
   "note": "Status composed from live inputs; nulls indicate missing feed this run."
 }
