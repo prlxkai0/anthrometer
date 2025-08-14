@@ -4,13 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AnthroMeter / Good Times Index</title>
-  <link rel="stylesheet" href="./styles.css?v=reset1" />
+
+  <!-- Styles (cache-bust by querystring; no renames) -->
+  <link rel="stylesheet" href="./styles.css?v=build30" />
+
+  <!-- Plotly + App -->
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-  <script src="./script.js?v=reset1" defer></script>
+  <script src="./script.js?v=build30" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <h1><span class="brand">AnthroMeter</span><span class="slash"> / </span><span class="light">Good Times Index</span></h1>
+    <h1 class="brandline">
+      <span class="brand">AnthroMeter</span>
+      <span class="slash"> / </span>
+      <span class="subtitle">Good Times Index</span>
+    </h1>
     <div class="top-actions">
       <label class="switch">
         <input id="dark-mode" type="checkbox" />
@@ -18,12 +26,13 @@
       </label>
       <label class="switch">
         <input id="auto-refresh" type="checkbox" checked />
-        <span>Auto‑refresh</span>
+        <span>Auto</span>
       </label>
       <span id="live-ago" class="live">updated —</span>
     </div>
   </header>
 
+  <!-- KPI header row -->
   <section class="kpis">
     <div class="kpi">
       <div class="kpi-label">Current GTI</div>
@@ -34,7 +43,7 @@
       <div class="kpi-val" id="kpi-year">—</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">vs 30‑day avg</div>
+      <div class="kpi-label">vs 30-day avg</div>
       <div class="kpi-val" id="kpi-delta">—</div>
     </div>
     <div class="kpi">
@@ -43,6 +52,7 @@
     </div>
   </section>
 
+  <!-- Tabs -->
   <nav class="tabs">
     <a href="#" class="tab active" data-tab="overview">Overview</a>
     <a href="#" class="tab" data-tab="details">Details</a>
@@ -50,11 +60,12 @@
   </nav>
 
   <main>
+    <!-- Overview -->
     <section id="tab-overview" class="tabpanel active">
       <div class="controls">
         <label>Line color
           <select id="line-color">
-            <option value="auto">Auto</option>
+            <option value="auto" selected>Auto</option>
             <option value="blue">Blue</option>
             <option value="green">Green</option>
             <option value="purple">Purple</option>
@@ -84,37 +95,32 @@
       <section id="signals" class="signals">
         <h3>Today’s Signals</h3>
         <ul id="signals-list"></ul>
-        <div id="signals-foot" class="muted">—</div>
+        <div id="signals-foot" class="muted">Signals compare to recent baselines.</div>
       </section>
 
       <!-- Year summary (click on chart) -->
       <div id="year-summary" class="ys" style="display:none;">
-        <button id="ys-close" class="close">×</button>
+        <button id="ys-close" class="close" aria-label="Close">×</button>
         <div class="ys-title"><span id="ys-year">—</span> • GTI <span id="ys-gti">—</span></div>
         <div class="ys-hover" id="ys-hover">—</div>
         <div class="ys-ai" id="ys-ai">Summary coming soon.</div>
       </div>
-
-      <!-- Debug tile (collapsible) -->
-      <details id="debug-tile">
-        <summary>Debug: status.json (click to expand)</summary>
-        <pre id="debug-pre"></pre>
-        <div class="muted"><a id="debug-link" href="./data/status.json" target="_blank" rel="noopener">Open raw status.json</a></div>
-      </details>
     </section>
 
+    <!-- Details -->
     <section id="tab-details" class="tabpanel">
       <div id="category-bars" class="bars"></div>
       <div id="category-table" class="table"></div>
     </section>
 
+    <!-- Sources & Methodology -->
     <section id="tab-sources" class="tabpanel">
       <div id="methodology"></div>
       <div id="sources-list" class="table"></div>
     </section>
   </main>
 
-  <!-- legacy header spans kept for compatibility (hidden) -->
+  <!-- Hidden legacy spans (for backwards compatibility) -->
   <div style="display:none">
     <span id="current-year"></span>
     <span id="current-gti"></span>
