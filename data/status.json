@@ -1,0 +1,25 @@
+{
+  "updated_iso": "2025-08-14T00:19:04.851512Z",
+  "gti_last": 3097.39,
+  "gti_30d_avg": 2342.22,
+  "planetary": {
+    "co2_ppm": null,
+    "gistemp_anom_c": null,
+    "delta_ppm": null,
+    "delta_anom": null
+  },
+  "sentiment": {
+    "avg_tone_30d": 0.0,
+    "delta_tone": 0.0
+  },
+  "markets": {
+    "acwi_last": null,
+    "acwi_ret30": 0.0,
+    "vix": null,
+    "brent_last": null,
+    "brent_vol30": 0.0,
+    "econ_score": 60.0,
+    "entropy_score": 60.0
+  },
+  "note": "Auto-refreshed; signals compare to recent baselines. Lower VIX/volatility = more ordered (higher Entropy)."
+}

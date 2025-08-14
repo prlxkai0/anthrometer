@@ -1,17 +1,13 @@
 {
-  "updated": "2025-08-13T21:46:46.402339Z",
+  "updated": "2025-08-14T00:19:04.851512Z",
   "scores": {
-    "Planetary Health": 42.0,
-    "Economic Wellbeing": 88.0,
-    "Global Peace & Conflict": 45,
-    "Public Health": 65,
-    "Civic Freedom & Rights": 60,
-    "Technological Progress": 75,
-    "Sentiment & Culture": 49.96,
-    "Entropy Index": 31.31
-  },
-  "modifiers": {
-    "entropy": 68.0,
-    "sentiment": 52.0
+    "Planetary Health": 55.0,
+    "Economic Wellbeing": 60.0,
+    "Global Peace & Conflict": 55.0,
+    "Public Health": 65.0,
+    "Civic Freedom & Rights": 62.0,
+    "Technological Progress": 70.0,
+    "Sentiment & Culture": 50.0,
+    "Entropy Index": 60.0
   }
 }

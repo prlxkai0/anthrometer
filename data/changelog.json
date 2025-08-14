@@ -1,6 +1,16 @@
 {
   "entries": [
-    { "date": "2025-08-13", "change": "Initial public prototype, daily updater online." },
-    { "date": "2025-08-14", "change": "Tabs added: Details, Sources & Methodology, Change Log. Hover/click interactions scaffolded." }
+    {
+      "date": "2025-08-13",
+      "change": "Initial public prototype, daily updater online."
+    },
+    {
+      "date": "2025-08-14",
+      "change": "Tabs added: Details, Sources & Methodology, Change Log. Hover/click interactions scaffolded."
+    },
+    {
+      "date": "2025-08-14 00:19:04 UTC",
+      "change": "Daily update. Econ=60.0, Entropy=60.0."
+    }
   ]
 }
