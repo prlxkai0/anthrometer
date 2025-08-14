@@ -1,12 +1,12 @@
 {
-  "updated_iso": "2025-08-14T18:48:15Z",
-  "gti_last": 2804.13,
-  "gti_30d_avg": 2332.45,
+  "updated_iso": "2025-08-14T19:04:52Z",
+  "gti_last": NaN,
+  "gti_30d_avg": NaN,
   "planetary": {
     "co2_ppm": null,
-    "gistemp_anom_c": null,
+    "gistemp_anom_c": 1.69,
     "delta_ppm": null,
-    "delta_anom": null
+    "delta_anom": 0.11
   },
   "food": {
     "fpi_last": null,

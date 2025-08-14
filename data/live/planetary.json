@@ -1,3 +1,8 @@
 {
-  "updated": "2025-08-14T18:47:51.612426Z"
+  "updated_iso": "2025-08-14T19:04:27Z",
+  "co2_ppm": null,
+  "delta_ppm": null,
+  "gistemp_anom_c": 1.69,
+  "delta_anom": 0.11,
+  "note": "CO\u2082 from NOAA MLO (fallback OWID); temperature anomaly from OWID."
 }
