@@ -1,4 +1,4 @@
-// script.js — restored charm UI, light-by-default, crash-resistant
+// script.js — charm UI, Inter font, light-by-default, dark-mode chart repaint
 document.addEventListener('DOMContentLoaded', () => {
   // ---------- helpers ----------
   const bust = () => Date.now();
@@ -59,11 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     prefs.darkMode = !!chkDark.checked;
     document.body.classList.toggle('dark', prefs.darkMode);
     savePrefs();
-    try{ Plotly.Plots.resize('chart-plot'); }catch{}
+    // Repaint chart with new palette
+    plotLine(true);
   });
-  selColor?.addEventListener('change', ()=>{ prefs.lineColor = selColor.value; savePrefs(); plotLine(); });
-  selWeight?.addEventListener('change', ()=>{ prefs.lineWeight = Number(selWeight.value); savePrefs(); plotLine(); });
-  selRange?.addEventListener('change', ()=>{ prefs.range = selRange.value; savePrefs(); plotLine(); });
+  selColor?.addEventListener('change', ()=>{ prefs.lineColor = selColor.value; savePrefs(); plotLine(true); });
+  selWeight?.addEventListener('change', ()=>{ prefs.lineWeight = Number(selWeight.value); savePrefs(); plotLine(true); });
+  selRange?.addEventListener('change', ()=>{ prefs.range = selRange.value; savePrefs(); plotLine(true); });
 
   // ---------- tabs ----------
   tabs.forEach(btn=>{
@@ -95,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return undefined;
   }
 
-  function plotLine(){
+  function plotLine(forceRepaint=false){
     const el = document.getElementById('chart-plot'); if(!el) return;
     if(!Array.isArray(SERIES)||SERIES.length===0){ el.innerHTML='<div class="warn">No GTI data found.</div>'; return; }
     el.innerHTML='';
@@ -119,18 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const xr = computeRange(years);
 
-    Plotly.newPlot('chart-plot',[{
-      x: years, y: vals, type:'scatter', mode:'lines',
-      hovertemplate:'Year: %{x}<br>GTI: %{y:.0f}<extra></extra>',
-      line:{width:useWidth, color:useColor}
-    }],{
+    const layout = {
       margin:{l:60,r:20,t:50,b:40},
       title:'Good Times Index (GTI) — 1900 to 2025',
       xaxis:{title:'Year', showgrid:true, gridcolor:cssVar('--grid'), range:xr},
       yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor:cssVar('--grid')},
       annotations,
-      paper_bgcolor:cssVar('--card'), plot_bgcolor:cssVar('--card'), font:{color:cssVar('--fg')}
-    }, {displayModeBar:false, responsive:true}).then(gd=>{
+      paper_bgcolor:cssVar('--card'),
+      plot_bgcolor:cssVar('--card'),
+      font:{color:cssVar('--fg')}
+    };
+
+    Plotly.newPlot('chart-plot',[{
+      x: years, y: vals, type:'scatter', mode:'lines',
+      hovertemplate:'Year: %{x}<br>GTI: %{y:.0f}<extra></extra>',
+      line:{width:useWidth, color:useColor}
+    }], layout, {displayModeBar:false, responsive:true}).then(gd=>{
+      if(forceRepaint){ try{ Plotly.relayout(gd, layout); }catch{} }
       gd.on('plotly_hover', ev=>{
         const year=ev?.points?.[0]?.x; if(!year) return;
         const hover=EVENTS[String(year)];
