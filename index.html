@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AnthroMeter / Good Times Index</title>
 
-  <!-- Styles (cache-bust by querystring; no renames) -->
-  <link rel="stylesheet" href="./styles.css?v=build30" />
-
-  <!-- Plotly + App -->
+  <link rel="stylesheet" href="./styles.css?v=charm1" />
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
-  <script src="./script.js?v=build30" defer></script>
+  <script src="./script.js?v=charm1" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -32,7 +29,7 @@
     </div>
   </header>
 
-  <!-- KPI header row -->
+  <!-- KPIs row -->
   <section class="kpis">
     <div class="kpi">
       <div class="kpi-label">Current GTI</div>
@@ -60,7 +57,7 @@
   </nav>
 
   <main>
-    <!-- Overview -->
+    <!-- Overview tab -->
     <section id="tab-overview" class="tabpanel active">
       <div class="controls">
         <label>Line color
@@ -98,7 +95,7 @@
         <div id="signals-foot" class="muted">Signals compare to recent baselines.</div>
       </section>
 
-      <!-- Year summary (click on chart) -->
+      <!-- Click-summary popover (auto-hides) -->
       <div id="year-summary" class="ys" style="display:none;">
         <button id="ys-close" class="close" aria-label="Close">×</button>
         <div class="ys-title"><span id="ys-year">—</span> • GTI <span id="ys-gti">—</span></div>
@@ -107,20 +104,20 @@
       </div>
     </section>
 
-    <!-- Details -->
+    <!-- Details tab -->
     <section id="tab-details" class="tabpanel">
       <div id="category-bars" class="bars"></div>
       <div id="category-table" class="table"></div>
     </section>
 
-    <!-- Sources & Methodology -->
+    <!-- Sources tab -->
     <section id="tab-sources" class="tabpanel">
       <div id="methodology"></div>
       <div id="sources-list" class="table"></div>
     </section>
   </main>
 
-  <!-- Hidden legacy spans (for backwards compatibility) -->
+  <!-- Hidden legacy spans (compat) -->
   <div style="display:none">
     <span id="current-year"></span>
     <span id="current-gti"></span>
