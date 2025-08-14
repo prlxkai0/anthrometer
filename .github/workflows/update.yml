@@ -57,56 +57,25 @@ jobs:
           echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then cat data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
           echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then cat data/live/markets.json; else echo "markets.json MISSING"; fi
 
-      # ---- Validate & seed numeric defaults so UI never shows '—' ----
-      - name: Validate/Seed status.json
+            # ---- FORCE status.json for one run (diagnostic) ----
+      - name: FORCE status.json (diagnostic)
         run: |
           python - <<'PY'
           import json, time, pathlib
           p = pathlib.Path('data/status.json')
           now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-          def num(v, d=0.0):
-              try: return float(v)
-              except: return float(d)
-          seed = {
+          force = {
             "updated_iso": now,
-            "gti_last": 300.0,
-            "gti_30d_avg": 300.0,
-            "planetary": { "co2_ppm": 420.00, "gistemp_anom_c": 1.20, "delta_ppm": 0.10, "delta_anom": 0.00 },
-            "sentiment": { "avg_tone_30d": 0.00, "delta_tone": 0.00 },
-            "markets":   { "acwi_last": 100.00, "acwi_ret30": 0.0000, "vix": 15.00, "brent_last": 80.00, "brent_vol30": 0.0200, "econ_score": 60.0, "entropy_score": 60.0 },
-            "note": "Seeded defaults (one-off) to prevent UI blanks."
+            "gti_last": 3123.45,
+            "gti_30d_avg": 3099.99,
+            "planetary": { "co2_ppm": 421.23, "gistemp_anom_c": 1.11, "delta_ppm": 0.23, "delta_anom": 0.01 },
+            "sentiment": { "avg_tone_30d": -0.85, "delta_tone": 0.12 },
+            "markets":   { "acwi_last": 101.23, "acwi_ret30": 0.0133, "vix": 14.72, "brent_last": 79.80, "brent_vol30": 0.0211, "econ_score": 62.5, "entropy_score": 71.0 },
+            "note": "FORCED DIAGNOSTIC PAYLOAD"
           }
-          write_seed = False
-          if not p.exists():
-              write_seed = True
-          else:
-              try:
-                  d = json.loads(p.read_text())
-              except Exception:
-                  d = {}
-              # Coalesce and coerce to numbers; if any critical missing, we seed
-              crit = [
-                ('planetary','co2_ppm'), ('planetary','gistemp_anom_c'),
-                ('sentiment','avg_tone_30d'),
-                ('markets','acwi_last'), ('markets','vix'), ('markets','brent_vol30')
-              ]
-              for k1,k2 in crit:
-                  try:
-                      v = d.get(k1,{}).get(k2, None)
-                      _ = num(v)  # will throw if not numeric-like
-                  except Exception:
-                      write_seed = True
-                      break
-              # Also ensure top-level fields exist
-              for k in ['updated_iso','gti_last','gti_30d_avg']:
-                  if k not in d:
-                      write_seed = True
-                      break
-          if write_seed:
-              p.write_text(json.dumps(seed, indent=2))
-              print("status.json was missing/incomplete — wrote seeded defaults.")
-          else:
-              print("status.json looks complete — keeping generated values.")
+          p.write_text(json.dumps(force, indent=2))
+          print("WROTE FORCED status.json")
+          print(p.read_text())
           PY
 
       - name: Upload data artifact
