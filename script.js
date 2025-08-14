@@ -1,4 +1,4 @@
-// script.js — light-by-default, dark-mode repaint, decade highlight + new signals
+// script.js — light-by-default, dark-mode repaint, decade highlight + signals
 document.addEventListener('DOMContentLoaded', () => {
   // ---------- helpers ----------
   const bust = () => Date.now();
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs   = Array.from(document.querySelectorAll('.tab'));
   const panels = Array.from(document.querySelectorAll('.tabpanel'));
 
-  // Add a decade highlight checkbox to the controls (non-destructive)
+  // Add a decade highlight checkbox (default on)
   const controls = document.querySelector('.controls');
   let chkDecade = null;
   if (controls && !document.getElementById('decade-highlight')) {
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let SUMS   = {};
   let LAST_STATUS_ISO = null;
 
-  // ---------- helpers ----------
   function computeRange(years){
     const pick=(selRange&&selRange.value)||'all';
     if(!years?.length) return undefined;
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return undefined;
   }
 
-  // Build decade shape (subtle background band)
+  // stronger decade band (a hair more opacity + accent tint)
   function decadeShape(years, vals){
     if(!prefs.decade || !years?.length) return [];
     const lastYear = years[years.length-1];
@@ -114,12 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const end   = lastYear + 0.99;
     const yMin  = Math.min(...vals);
     const yMax  = Math.max(...vals);
+    const grid  = cssVar('--grid') || '#e9edf3';
+    const accent= cssVar('--accent') || '#2563eb';
     return [{
       type:'rect',
       xref:'x', yref:'y',
       x0:start, x1:end, y0:yMin, y1:yMax,
-      fillcolor: cssVar('--grid') || '#e9edf3',
-      opacity: 0.25,
+      fillcolor: accent,      // tint band slightly
+      opacity: 0.17,          // was ~0.25 on grid color; now 0.17 on accent (more visible)
       line:{width:0}
     }];
   }
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       margin:{l:60,r:20,t:50,b:40},
       title:'Good Times Index (GTI) — 1900 to 2025',
       xaxis:{title:'Year', showgrid:true, gridcolor:cssVar('--grid'), range:xr},
-      yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor:cssVar('--grid')},
+      yaxis:{title:'GTI Score (Unbounded)', showgrid:true, gridcolor:cssVar('--grid')}, // ← renamed
       annotations,
       shapes: decadeShape(years, vals),
       paper_bgcolor:cssVar('--card'),
@@ -278,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ---------- load & poll ----------
   async function loadAll(){
     const [gti, status, cats, src, ev, sums] = await Promise.all([
       getJSON(urls.gti()),
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAll().catch(()=>{});
   setInterval(()=>{ if(autoRF?.checked) poll(); }, 60000);
 
-  // ---------- exports ----------
+  // Exports
   btnPNG?.addEventListener('click', async()=>{ try{ await Plotly.downloadImage('chart-plot',{format:'png',filename:'anthrometer-gti'});}catch{} });
   btnCSV?.addEventListener('click', ()=>{
     if(!Array.isArray(SERIES)||SERIES.length===0) return;
