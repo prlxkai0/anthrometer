@@ -32,7 +32,7 @@ jobs:
         run: python scripts/fetch_markets.py
 
       - name: Update GTI
-        run: python scripts/updater.py
+        run: python updater.py
 
       - name: Commit & push
         run: |
