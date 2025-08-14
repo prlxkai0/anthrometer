@@ -86,3 +86,26 @@ th{text-align:left; color:var(--muted)}
 
 /* Footer */
 footer .muted{ color:var(--muted); margin:20px 0 10px }
+
+/* Hide the Change Log tab/panel entirely */
+.tab[data-tab="changelog"],
+#tab-changelog {
+  display: none !important;
+}
+
+/* Debug tile look */
+#debug-tile {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--muted);
+  background: var(--card);
+}
+#debug-tile summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+#debug-tile pre {
+  font-size: 12px;
+  line-height: 1.35;
+}
