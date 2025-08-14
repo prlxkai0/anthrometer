@@ -1,3 +1,9 @@
+      - name: Fetch Food Access
+        run: python fetch_foodaccess.py
+
+      - name: Fetch Employment
+        run: python fetch_employment.py
+
 name: Update Daily GTI
 
 on:
