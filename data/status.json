@@ -1,7 +1,7 @@
 {
-  "updated_iso": "2025-08-14T06:00:04Z",
-  "gti_last": 3123.45,
-  "gti_30d_avg": 3099.99,
+  "updated_iso": "2025-08-14T06:37:55.492756Z",
+  "gti_last": 2935.86,
+  "gti_30d_avg": 2336.84,
   "planetary": {
     "co2_ppm": 421.23,
     "gistemp_anom_c": 1.11,
@@ -21,5 +21,5 @@
     "econ_score": 62.5,
     "entropy_score": 71.0
   },
-  "note": "FORCED DIAGNOSTIC PAYLOAD"
+  "note": "Auto-refreshed; values coalesced from latest available data (schema-agnostic)."
 }
