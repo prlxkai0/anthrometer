@@ -2,7 +2,7 @@ name: Update Daily GTI
 
 on:
   schedule:
-    - cron: "20 2 * * *"   # 02:20 UTC daily
+    - cron: "20 2 * * *"
   workflow_dispatch:
 
 jobs:
@@ -33,29 +33,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      # ---- Fetchers (repo root) ----
       - name: Fetch Planetary Health
         run: python fetch_planetary.py
+        continue-on-error: true
 
       - name: Fetch Global Sentiment
         run: python fetch_sentiment.py
+        continue-on-error: true
 
       - name: Fetch Markets
         run: python fetch_markets.py
+        continue-on-error: true
 
-      # ---- Updater ----
       - name: Update GTI
         run: python updater.py
 
-      # ---- Diagnostics: show files + print JSON ----
       - name: Show generated files
         run: |
           echo "=== data ==="; ls -la data
           echo "=== data/live ==="; ls -la data/live || true
           echo "=== status.json ==="; if [ -f data/status.json ]; then cat data/status.json; else echo "status.json MISSING"; fi
-          echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then cat data/live/planetary.json; else echo "planetary.json MISSING"; fi
-          echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then cat data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
-          echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then cat data/live/markets.json; else echo "markets.json MISSING"; fi
+          echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then head -n 60 data/live/planetary.json; else echo "planetary.json MISSING"; fi
+          echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then head -n 60 data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
+          echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then head -n 60 data/live/markets.json; else echo "markets.json MISSING"; fi
 
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
