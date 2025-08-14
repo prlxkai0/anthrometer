@@ -66,6 +66,9 @@ jobs:
           echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then head -n 80 data/live/markets.json; else echo "markets.json MISSING"; fi
           echo "=== food.json ==="; if [ -f data/live/food.json ]; then head -n 80 data/live/food.json; else echo "food.json MISSING"; fi
           echo "=== conflict.json ==="; if [ -f data/live/conflict.json ]; then head -n 80 data/live/conflict.json; else echo "conflict.json MISSING"; fi
+          echo "=== foodaccess.json ==="; if [ -f data/live/foodaccess.json ]; then head -n 80 data/live/foodaccess.json; else echo "foodaccess.json MISSING"; fi
+          echo "=== employment.json ==="; if [ -f data/live/employment.json ]; then head -n 80 data/live/employment.json; else echo "employment.json MISSING"; fi
+
 
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
