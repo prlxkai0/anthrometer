@@ -4,5 +4,5 @@
   "avg_last30": null,
   "avg_prev30": null,
   "delta_30": null,
-  "note": "GDELT Timelines combined: VIOLENCE, CONFLICT, PROTEST, ARREST (7\u2011day smooth, 60d window)."
+  "note": "Using cached conflict.json (fetch failed)."
 }
