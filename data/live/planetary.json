@@ -1,9 +1,9 @@
 {
-  "updated": "2025-08-14T00:19:02.704821Z",
+  "updated": "2025-08-14T00:23:44.469095Z",
   "co2_ppm": null,
   "co2_ppm_yoy": null,
-  "gistemp_anom_c": null,
+  "gistemp_anom_c": 1.03,
   "delta_ppm": null,
-  "delta_anom": null,
+  "delta_anom": 0.0,
   "score": 55.0
 }

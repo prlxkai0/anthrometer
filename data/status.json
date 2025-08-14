@@ -1,12 +1,12 @@
 {
-  "updated_iso": "2025-08-14T00:19:04.851512Z",
-  "gti_last": 3097.39,
-  "gti_30d_avg": 2342.22,
+  "updated_iso": "2025-08-14T00:23:52.467091Z",
+  "gti_last": 3073.78,
+  "gti_30d_avg": 2341.44,
   "planetary": {
     "co2_ppm": null,
-    "gistemp_anom_c": null,
+    "gistemp_anom_c": 1.03,
     "delta_ppm": null,
-    "delta_anom": null
+    "delta_anom": 0.0
   },
   "sentiment": {
     "avg_tone_30d": 0.0,
