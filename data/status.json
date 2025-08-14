@@ -1,25 +1,25 @@
 {
-  "updated_iso": "2025-08-14T05:53:17.338066Z",
-  "gti_last": 2981.13,
-  "gti_30d_avg": 2338.35,
+  "updated_iso": "2025-08-14T06:00:04Z",
+  "gti_last": 3123.45,
+  "gti_30d_avg": 3099.99,
   "planetary": {
-    "co2_ppm": 0.0,
-    "gistemp_anom_c": 1.03,
-    "delta_ppm": 0.0,
-    "delta_anom": 0.0
+    "co2_ppm": 421.23,
+    "gistemp_anom_c": 1.11,
+    "delta_ppm": 0.23,
+    "delta_anom": 0.01
   },
   "sentiment": {
-    "avg_tone_30d": 0.0,
-    "delta_tone": 0.0
+    "avg_tone_30d": -0.85,
+    "delta_tone": 0.12
   },
   "markets": {
-    "acwi_last": 0.0,
-    "acwi_ret30": 0.0,
-    "vix": 0.0,
-    "brent_last": 0.0,
-    "brent_vol30": 0.0,
-    "econ_score": 60.0,
-    "entropy_score": 60.0
+    "acwi_last": 101.23,
+    "acwi_ret30": 0.0133,
+    "vix": 14.72,
+    "brent_last": 79.8,
+    "brent_vol30": 0.0211,
+    "econ_score": 62.5,
+    "entropy_score": 71.0
   },
-  "note": "Auto-refreshed; values are coalesced from latest available data."
+  "note": "FORCED DIAGNOSTIC PAYLOAD"
 }
