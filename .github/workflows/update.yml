@@ -1,3 +1,9 @@
+      - name: Fetch Food Price Index
+        run: python fetch_food.py
+
+      - name: Fetch Conflict Pulse
+        run: python fetch_conflict.py
+
 name: Update Daily GTI
 
 on:
@@ -48,15 +54,17 @@ jobs:
       - name: Update GTI
         run: python updater.py
 
-      - name: Show generated files
+           - name: Show generated files
         run: |
           echo "=== data ==="; ls -la data
           echo "=== data/live ==="; ls -la data/live || true
-          echo "=== status.json ==="; if [ -f data/status.json ]; then cat data/status.json; else echo "status.json MISSING"; fi
-          echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then head -n 60 data/live/planetary.json; else echo "planetary.json MISSING"; fi
-          echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then head -n 60 data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
-          echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then head -n 60 data/live/markets.json; else echo "markets.json MISSING"; fi
-
+          echo "=== status.json ==="; if [ -f data/status.json ]; then head -n 80 data/status.json; else echo "status.json MISSING"; fi
+          echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then head -n 80 data/live/planetary.json; else echo "planetary.json MISSING"; fi
+          echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then head -n 80 data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
+          echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then head -n 80 data/live/markets.json; else echo "markets.json MISSING"; fi
+          echo "=== food.json ==="; if [ -f data/live/food.json ]; then head -n 80 data/live/food.json; else echo "food.json MISSING"; fi
+          echo "=== conflict.json ==="; if [ -f data/live/conflict.json ]; then head -n 80 data/live/conflict.json; else echo "conflict.json MISSING"; fi
+          
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
         with:
