@@ -1,4 +1,4 @@
-// script.js — stable UI (no public debug), preserves previous aesthetic/behavior
+// script.js — stable UI (no public debug), preserves the prior aesthetic/behavior
 document.addEventListener('DOMContentLoaded', () => {
   const qs  = (sel, root=document) => root.querySelector(sel);
   const qsa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -15,12 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fmtN = (v, d=2) => (typeof v==='number' && isFinite(v)) ? v.toFixed(d) : '0.00';
   const nOr  = (v, d=0) => (typeof v==='number' && isFinite(v)) ? v : d;
-  const cssVar = (name) => getComputedStyle(document.body).getPropertyValue(name).trim();
+  const cssVar   = (name) => getComputedStyle(document.body).getPropertyValue(name).trim();
   const humanAgo = (ms)=>{ const s=Math.floor(ms/1000); if(s<60)return`${s}s ago`; const m=Math.floor(s/60); if(m<60)return`${m}m ago`; const h=Math.floor(m/60); if(h<24)return`${h}h ago`; const d=Math.floor(h/24); return `${d}d ago`; };
-
   async function getJSON(url){ try{ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(`HTTP ${r.status}`); return await r.json(); }catch{ return null; } }
 
-  // Elements
+  // Elements (unchanged IDs)
   const elUpdated = qs('#updated');
   const elCY      = qs('#current-year');
   const elCV      = qs('#current-gti');
@@ -91,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   selRange?.addEventListener('change', ()=>{ prefs.range=selRange.value; savePrefs(); plotLine(); });
 
   // State
-  let GTI_SERIES=[], EVENTS={}, SUMMARIES={}, lastStatusISO=null;
+  let GTI_SERIES=[], lastStatusISO=null;
 
   function computeRange(years){
     const pick=(selRange&&selRange.value)||'all';
@@ -136,28 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
       yaxis:{title:'GTI Index (Unbounded)',showgrid:true,gridcolor:cssVar('--grid')},
       annotations,
       paper_bgcolor:cssVar('--bg'),plot_bgcolor:cssVar('--card'),font:{color:cssVar('--fg')}
-    },{displayModeBar:false,responsive:true}).then(gd=>{
-      gd.on('plotly_hover', ev=>{
-        const year=ev?.points?.[0]?.x; if(!year) return;
-        const hover=EVENTS[String(year)];
-        if(hover && ys.hover){
-          ys.year && (ys.year.textContent=String(year));
-          ys.hover.textContent=hover;
-        }
-      });
-      gd.on('plotly_click', ev=>{
-        const year=ev?.points?.[0]?.x; if(!year) return;
-        let gtiVal='—';
-        for (let i=0;i<GTI_SERIES.length;i++){
-          if(GTI_SERIES[i].year===year){ const n=GTI_SERIES[i].gti; gtiVal=(typeof n==='number')?Math.round(n):'—'; break; }
-        }
-        ys.year && (ys.year.textContent=String(year));
-        ys.gti  && (ys.gti.textContent=gtiVal);
-        ys.hover&& (ys.hover.textContent=EVENTS[String(year)]||'—');
-        ys.ai   && (ys.ai.textContent=SUMMARIES[String(year)]||'Summary coming soon.');
-        if(ys.panel){ ys.panel.style.display='block'; if(ysTimer) clearTimeout(ysTimer); ysTimer=setTimeout(()=>{ys.panel.style.display='none';},10000); }
-      });
-    }).catch(()=>{});
+    },{displayModeBar:false,responsive:true}).catch(()=>{});
   }
 
   function renderCategories(cats){
@@ -219,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load & poll
   let lastStatusISO=null;
   async function loadAll(){
-    const [gti,cats,src,evt,sum,status] = await Promise.all([
+    const [gti,cats,src, /*evt*/, /*sum*/, status] = await Promise.all([
       getJSON(urls.gti()),
       getJSON(urls.cat()).catch(()=>null),
       getJSON(urls.src()).catch(()=>null),
@@ -228,8 +206,15 @@ document.addEventListener('DOMContentLoaded', () => {
       getJSON(urls.status()).catch(()=>null)
     ]);
 
-    GTI_SERIES=(gti&&Array.isArray(gti.series)&&gti.series.length)? gti.series : [{year:1900,gti:300}];
-    if(gti?.updated){ const ts=new Date(gti.updated).toUTCString(); elUpdated&&(elUpdated.textContent=ts); kpiUpd&&(kpiUpd.textContent=ts); }
+    // Always leave a visible line, even if gti.json missing
+    const series = (gti && Array.isArray(gti.series)) ? gti.series : [];
+    GTI_SERIES = series.length ? series : [{year:1900,gti:300}];
+
+    if(gti?.updated){
+      const ts=new Date(gti.updated).toUTCString();
+      elUpdated&&(elUpdated.textContent=ts);
+      kpiUpd&&(kpiUpd.textContent=ts);
+    }
 
     renderCategories(cats);
     renderSources(src);
