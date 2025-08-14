@@ -19,8 +19,10 @@ jobs:
         run: |
           pwd
           ls -la
+          echo "Python files in root:"
+          ls -la *.py || true
 
-      - name: Create data folders
+      - name: Ensure data folders
         run: |
           mkdir -p data/live
           touch data/.gitkeep
@@ -38,7 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      # --- Fetchers (ROOT paths) ---
+      # ---- Fetchers (all at repo root) ----
       - name: Fetch Planetary Health
         run: python fetch_planetary.py
 
@@ -48,19 +50,34 @@ jobs:
       - name: Fetch Markets
         run: python fetch_markets.py
 
-      # --- Build GTI & status ---
+      # ---- Updater ----
       - name: Update GTI
         run: python updater.py
 
+      # ---- Diagnostics: show files + print JSON heads ----
       - name: Show generated files
         run: |
           echo "=== data ==="
           ls -la data
           echo "=== data/live ==="
-          ls -la data/live
-          echo "=== preview status.json ==="
-          if [ -f data/status.json ]; then head -n 50 data/status.json; else echo "status.json MISSING"; fi
+          ls -la data/live || true
+          echo "=== preview: data/status.json ==="
+          if [ -f data/status.json ]; then head -n 80 data/status.json; else echo "status.json MISSING"; fi
+          echo "=== preview: data/live/planetary.json ==="
+          if [ -f data/live/planetary.json ]; then head -n 80 data/live/planetary.json; else echo "planetary.json MISSING"; fi
+          echo "=== preview: data/live/sentiment.json ==="
+          if [ -f data/live/sentiment.json ]; then head -n 80 data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
+          echo "=== preview: data/live/markets.json ==="
+          if [ -f data/live/markets.json ]; then head -n 80 data/live/markets.json; else echo "markets.json MISSING"; fi
 
+      # Upload data folder as artifact for inspection (optional but helpful)
+      - name: Upload data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-folder
+          path: data
+
+      # Commit & push any new/updated files
       - name: Commit & push
         run: |
           git config user.name "github-actions[bot]"
