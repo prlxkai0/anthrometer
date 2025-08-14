@@ -45,8 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
   selWeight?.addEventListener('change', ()=>{ prefs.lineWeight=Number(selWeight.value); savePrefs(); plotLine(); });
   selRange?.addEventListener('change', ()=>{ prefs.range=selRange.value; savePrefs(); plotLine(); });
 
-  // State
-  let SERIES = []; let LAST_STATUS_ISO = null;
 
   function computeRange(years){
     const pick=(selRange&&selRange.value)||'all';
