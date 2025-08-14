@@ -1,4 +1,4 @@
-// script.js — charm UI, Inter font, light-by-default, dark-mode chart repaint
+// script.js — light-by-default, dark-mode repaint, decade highlight + new signals
 document.addEventListener('DOMContentLoaded', () => {
   // ---------- helpers ----------
   const bust = () => Date.now();
@@ -34,6 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs   = Array.from(document.querySelectorAll('.tab'));
   const panels = Array.from(document.querySelectorAll('.tabpanel'));
 
+  // Add a decade highlight checkbox to the controls (non-destructive)
+  const controls = document.querySelector('.controls');
+  let chkDecade = null;
+  if (controls && !document.getElementById('decade-highlight')) {
+    const lab = document.createElement('label');
+    lab.innerHTML = `Highlight decade <input id="decade-highlight" type="checkbox" checked />`;
+    lab.style.marginLeft = '6px';
+    controls.appendChild(lab);
+    chkDecade = lab.querySelector('#decade-highlight');
+  } else {
+    chkDecade = document.getElementById('decade-highlight');
+  }
+
   // Year summary popup
   const ys = {
     panel: document.getElementById('year-summary'),
@@ -45,23 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   let ysTimer = null;
 
-  // ---------- preferences (light by default) ----------
+  // ---------- preferences ----------
   const prefs = JSON.parse(localStorage.getItem('prefs')||'{}');
-  if (typeof prefs.darkMode==='undefined'){ prefs.darkMode = false; } // force light default
+  if (typeof prefs.darkMode==='undefined'){ prefs.darkMode = false; } // light default
+  if (typeof prefs.decade==='undefined'){ prefs.decade = true; }
   document.body.classList.toggle('dark', !!prefs.darkMode);
-  if (chkDark) chkDark.checked = !!prefs.darkMode;
+  if (chkDark)   chkDark.checked   = !!prefs.darkMode;
+  if (chkDecade) chkDecade.checked = !!prefs.decade;
   if (selColor)  selColor.value  = prefs.lineColor || 'auto';
   if (selWeight) selWeight.value = String(prefs.lineWeight || 3);
   if (selRange)  selRange.value  = prefs.range || 'all';
   function savePrefs(){ localStorage.setItem('prefs', JSON.stringify(prefs)); }
 
-  chkDark?.addEventListener('change', ()=>{
-    prefs.darkMode = !!chkDark.checked;
-    document.body.classList.toggle('dark', prefs.darkMode);
-    savePrefs();
-    // Repaint chart with new palette
-    plotLine(true);
-  });
+  chkDark?.addEventListener('change', ()=>{ prefs.darkMode = !!chkDark.checked; document.body.classList.toggle('dark', prefs.darkMode); savePrefs(); plotLine(true); });
+  chkDecade?.addEventListener('change', ()=>{ prefs.decade = !!chkDecade.checked; savePrefs(); plotLine(true); });
   selColor?.addEventListener('change', ()=>{ prefs.lineColor = selColor.value; savePrefs(); plotLine(true); });
   selWeight?.addEventListener('change', ()=>{ prefs.lineWeight = Number(selWeight.value); savePrefs(); plotLine(true); });
   selRange?.addEventListener('change', ()=>{ prefs.range = selRange.value; savePrefs(); plotLine(true); });
@@ -96,7 +106,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return undefined;
   }
 
-  function plotLine(forceRepaint=false){
+  // Build decade shape (subtle background band)
+  function decadeShape(years, vals){
+    if(!prefs.decade || !years?.length) return [];
+    const lastYear = years[years.length-1];
+    const start = lastYear - 9;
+    const end   = lastYear + 0.99;
+    const yMin  = Math.min(...vals);
+    const yMax  = Math.max(...vals);
+    return [{
+      type:'rect',
+      xref:'x', yref:'y',
+      x0:start, x1:end, y0:yMin, y1:yMax,
+      fillcolor: cssVar('--grid') || '#e9edf3',
+      opacity: 0.25,
+      line:{width:0}
+    }];
+  }
+
+  function plotLine(force=false){
     const el = document.getElementById('chart-plot'); if(!el) return;
     if(!Array.isArray(SERIES)||SERIES.length===0){ el.innerHTML='<div class="warn">No GTI data found.</div>'; return; }
     el.innerHTML='';
@@ -119,13 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
 
     const xr = computeRange(years);
-
     const layout = {
       margin:{l:60,r:20,t:50,b:40},
       title:'Good Times Index (GTI) — 1900 to 2025',
       xaxis:{title:'Year', showgrid:true, gridcolor:cssVar('--grid'), range:xr},
       yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor:cssVar('--grid')},
       annotations,
+      shapes: decadeShape(years, vals),
       paper_bgcolor:cssVar('--card'),
       plot_bgcolor:cssVar('--card'),
       font:{color:cssVar('--fg')}
@@ -136,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hovertemplate:'Year: %{x}<br>GTI: %{y:.0f}<extra></extra>',
       line:{width:useWidth, color:useColor}
     }], layout, {displayModeBar:false, responsive:true}).then(gd=>{
-      if(forceRepaint){ try{ Plotly.relayout(gd, layout); }catch{} }
+      if(force){ try{ Plotly.relayout(gd, layout); }catch{} }
       gd.on('plotly_hover', ev=>{
         const year=ev?.points?.[0]?.x; if(!year) return;
         const hover=EVENTS[String(year)];
@@ -177,45 +205,45 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ const panel=document.getElementById('year-summary'); if(panel&&panel.style.display!=='none'){ panel.style.display='none'; if(ysTimer) clearTimeout(ysTimer); }}});
 
   function renderSignals(status){
-  if(!status) return;
-  try{
-    if(status.updated_iso){
-      const t=new Date(status.updated_iso).toUTCString();
-      kpiUpd && (kpiUpd.textContent=t);
-      liveAgo && (liveAgo.textContent=`updated ${humanAgo(Date.now()-new Date(status.updated_iso).getTime())}`);
-    }
-    const last=nOr(status.gti_last,null), avg=nOr(status.gti_30d_avg,null);
-    if(last!==null && avg!==null && kpiDelta){
-      const pct = avg ? ((last-avg)/avg)*100 : 0;
-      kpiDelta.textContent = `${pct.toFixed(2)}% vs 30d`;
-    }
-  }catch{}
-  const ul=document.getElementById('signals-list'); if(!ul) return;
-  const items=[];
-  try{
-    if(status.planetary){
-      items.push(`<li><span class="sig-name">CO₂ (ppm)</span><span class="sig-val">${fmtN(status.planetary.co2_ppm,2)}</span></li>`);
-      items.push(`<li><span class="sig-name">Temp anomaly (°C)</span><span class="sig-val">${fmtN(status.planetary.gistemp_anom_c,2)}</span></li>`);
-    }
-    if(status.food){
-      const mom = (status.food.fpi_mom==null) ? '—' : fmtN(status.food.fpi_mom,2);
-      items.push(`<li><span class="sig-name">Food price index</span><span class="sig-val">${fmtN(status.food.fpi_last,2)} (${mom} m/m)</span></li>`);
-    }
-    if(status.sentiment){
-      items.push(`<li><span class="sig-name">News tone (30d avg)</span><span class="sig-val">${fmtN(status.sentiment.avg_tone_30d,2)}</span></li>`);
-    }
-    if(status.conflict){
-      const d30 = (status.conflict.delta_30==null) ? '—' : fmtN(status.conflict.delta_30,2);
-      items.push(`<li><span class="sig-name">Conflict pulse (30d)</span><span class="sig-val">${fmtN(status.conflict.avg_last30,2)} (${d30} vs prev 30d)</span></li>`);
-    }
-    if(status.markets){
-      items.push(`<li><span class="sig-name">ACWI (30d return)</span><span class="sig-val">${(nOr(status.markets.acwi_ret30,0)*100).toFixed(2)}%</span></li>`);
-      items.push(`<li><span class="sig-name">VIX (level)</span><span class="sig-val">${fmtN(status.markets.vix,2)}</span></li>`);
-      items.push(`<li><span class="sig-name">Brent 30d vol</span><span class="sig-val">${(nOr(status.markets.brent_vol30,0)*100).toFixed(2)}%</span></li>`);
-    }
-    ul.innerHTML = items.join('');
-  }catch{}
-}
+    if(!status) return;
+    try{
+      if(status.updated_iso){
+        const t=new Date(status.updated_iso).toUTCString();
+        kpiUpd && (kpiUpd.textContent=t);
+        liveAgo && (liveAgo.textContent=`updated ${humanAgo(Date.now()-new Date(status.updated_iso).getTime())}`);
+      }
+      const last=nOr(status.gti_last,null), avg=nOr(status.gti_30d_avg,null);
+      if(last!==null && avg!==null && kpiDelta){
+        const pct = avg ? ((last-avg)/avg)*100 : 0;
+        kpiDelta.textContent = `${pct.toFixed(2)}% vs 30d`;
+      }
+    }catch{}
+    const ul=document.getElementById('signals-list'); if(!ul) return;
+    const items=[];
+    try{
+      if(status.planetary){
+        items.push(`<li><span class="sig-name">CO₂ (ppm)</span><span class="sig-val">${fmtN(status.planetary.co2_ppm,2)}</span></li>`);
+        items.push(`<li><span class="sig-name">Temp anomaly (°C)</span><span class="sig-val">${fmtN(status.planetary.gistemp_anom_c,2)}</span></li>`);
+      }
+      if(status.food){
+        const mom = (status.food.fpi_mom==null) ? '—' : fmtN(status.food.fpi_mom,2);
+        items.push(`<li><span class="sig-name">Food price index</span><span class="sig-val">${fmtN(status.food.fpi_last,2)} (${mom} m/m)</span></li>`);
+      }
+      if(status.sentiment){
+        items.push(`<li><span class="sig-name">News tone (30d avg)</span><span class="sig-val">${fmtN(status.sentiment.avg_tone_30d,2)}</span></li>`);
+      }
+      if(status.conflict){
+        const d30 = (status.conflict.delta_30==null) ? '—' : fmtN(status.conflict.delta_30,2);
+        items.push(`<li><span class="sig-name">Conflict pulse (30d)</span><span class="sig-val">${fmtN(status.conflict.avg_last30,2)} (${d30} vs prev 30d)</span></li>`);
+      }
+      if(status.markets){
+        items.push(`<li><span class="sig-name">ACWI (30d return)</span><span class="sig-val">${(nOr(status.markets.acwi_ret30,0)*100).toFixed(2)}%</span></li>`);
+        items.push(`<li><span class="sig-name">VIX (level)</span><span class="sig-val">${fmtN(status.markets.vix,2)}</span></li>`);
+        items.push(`<li><span class="sig-name">Brent 30d vol</span><span class="sig-val">${(nOr(status.markets.brent_vol30,0)*100).toFixed(2)}%</span></li>`);
+      }
+      ul.innerHTML = items.join('');
+    }catch{}
+  }
 
   function renderCategories(cats){
     if(!cats) return;
@@ -261,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
       getJSON(urls.sums())
     ]);
 
-    // series fallback so a line always shows
     const series = (gti && Array.isArray(gti.series)) ? gti.series : [];
     SERIES = series.length ? series : [{year:1900, gti:300}];
 
