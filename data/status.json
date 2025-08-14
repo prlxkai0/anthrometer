@@ -1,11 +1,11 @@
 {
-  "updated_iso": "2025-08-14T00:23:52.467091Z",
-  "gti_last": 3073.78,
-  "gti_30d_avg": 2341.44,
+  "updated_iso": "2025-08-14T04:02:33.294008Z",
+  "gti_last": 3050.35,
+  "gti_30d_avg": 2340.65,
   "planetary": {
-    "co2_ppm": null,
+    "co2_ppm": 0.0,
     "gistemp_anom_c": 1.03,
-    "delta_ppm": null,
+    "delta_ppm": 0.0,
     "delta_anom": 0.0
   },
   "sentiment": {
@@ -13,13 +13,13 @@
     "delta_tone": 0.0
   },
   "markets": {
-    "acwi_last": null,
+    "acwi_last": 0.0,
     "acwi_ret30": 0.0,
-    "vix": null,
-    "brent_last": null,
+    "vix": 0.0,
+    "brent_last": 0.0,
     "brent_vol30": 0.0,
     "econ_score": 60.0,
     "entropy_score": 60.0
   },
-  "note": "Auto-refreshed; signals compare to recent baselines. Lower VIX/volatility = more ordered (higher Entropy)."
+  "note": "Auto-refreshed; values are coalesced from latest available data."
 }
