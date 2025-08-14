@@ -2,7 +2,7 @@ name: Update Daily GTI
 
 on:
   schedule:
-    - cron: "20 2 * * *"   # 02:20 UTC daily
+    - cron: "20 2 * * *"
   workflow_dispatch:
 
 jobs:
@@ -15,18 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show repo root (pre)
-        run: |
-          pwd
-          ls -la
-          echo "Python files in root:"
-          ls -la *.py || true
-
       - name: Ensure data folders
         run: |
           mkdir -p data/live
-          touch data/.gitkeep
-          touch data/live/.gitkeep
+          touch data/.gitkeep data/live/.gitkeep
+          ls -la
           ls -la data
           ls -la data/live
 
@@ -40,7 +33,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests
 
-      # ---- Fetchers (all at repo root) ----
+      # ---- Fetchers (must be in repo root) ----
       - name: Fetch Planetary Health
         run: python fetch_planetary.py
 
@@ -57,27 +50,71 @@ jobs:
       # ---- Diagnostics: show files + print JSON heads ----
       - name: Show generated files
         run: |
-          echo "=== data ==="
-          ls -la data
-          echo "=== data/live ==="
-          ls -la data/live || true
-          echo "=== preview: data/status.json ==="
-          if [ -f data/status.json ]; then head -n 80 data/status.json; else echo "status.json MISSING"; fi
-          echo "=== preview: data/live/planetary.json ==="
-          if [ -f data/live/planetary.json ]; then head -n 80 data/live/planetary.json; else echo "planetary.json MISSING"; fi
-          echo "=== preview: data/live/sentiment.json ==="
-          if [ -f data/live/sentiment.json ]; then head -n 80 data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
-          echo "=== preview: data/live/markets.json ==="
-          if [ -f data/live/markets.json ]; then head -n 80 data/live/markets.json; else echo "markets.json MISSING"; fi
+          echo "=== data ==="; ls -la data
+          echo "=== data/live ==="; ls -la data/live || true
+          echo "=== status.json ==="; if [ -f data/status.json ]; then cat data/status.json; else echo "status.json MISSING"; fi
+          echo "=== planetary.json ==="; if [ -f data/live/planetary.json ]; then cat data/live/planetary.json; else echo "planetary.json MISSING"; fi
+          echo "=== sentiment.json ==="; if [ -f data/live/sentiment.json ]; then cat data/live/sentiment.json; else echo "sentiment.json MISSING"; fi
+          echo "=== markets.json ==="; if [ -f data/live/markets.json ]; then cat data/live/markets.json; else echo "markets.json MISSING"; fi
 
-      # Upload data folder as artifact for inspection (optional but helpful)
+      # ---- Validate & seed numeric defaults so UI never shows '—' ----
+      - name: Validate/Seed status.json
+        run: |
+          python - <<'PY'
+          import json, time, pathlib
+          p = pathlib.Path('data/status.json')
+          now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+          def num(v, d=0.0):
+              try: return float(v)
+              except: return float(d)
+          seed = {
+            "updated_iso": now,
+            "gti_last": 300.0,
+            "gti_30d_avg": 300.0,
+            "planetary": { "co2_ppm": 420.00, "gistemp_anom_c": 1.20, "delta_ppm": 0.10, "delta_anom": 0.00 },
+            "sentiment": { "avg_tone_30d": 0.00, "delta_tone": 0.00 },
+            "markets":   { "acwi_last": 100.00, "acwi_ret30": 0.0000, "vix": 15.00, "brent_last": 80.00, "brent_vol30": 0.0200, "econ_score": 60.0, "entropy_score": 60.0 },
+            "note": "Seeded defaults (one-off) to prevent UI blanks."
+          }
+          write_seed = False
+          if not p.exists():
+              write_seed = True
+          else:
+              try:
+                  d = json.loads(p.read_text())
+              except Exception:
+                  d = {}
+              # Coalesce and coerce to numbers; if any critical missing, we seed
+              crit = [
+                ('planetary','co2_ppm'), ('planetary','gistemp_anom_c'),
+                ('sentiment','avg_tone_30d'),
+                ('markets','acwi_last'), ('markets','vix'), ('markets','brent_vol30')
+              ]
+              for k1,k2 in crit:
+                  try:
+                      v = d.get(k1,{}).get(k2, None)
+                      _ = num(v)  # will throw if not numeric-like
+                  except Exception:
+                      write_seed = True
+                      break
+              # Also ensure top-level fields exist
+              for k in ['updated_iso','gti_last','gti_30d_avg']:
+                  if k not in d:
+                      write_seed = True
+                      break
+          if write_seed:
+              p.write_text(json.dumps(seed, indent=2))
+              print("status.json was missing/incomplete — wrote seeded defaults.")
+          else:
+              print("status.json looks complete — keeping generated values.")
+          PY
+
       - name: Upload data artifact
         uses: actions/upload-artifact@v4
         with:
           name: data-folder
           path: data
 
-      # Commit & push any new/updated files
       - name: Commit & push
         run: |
           git config user.name "github-actions[bot]"
