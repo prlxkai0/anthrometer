@@ -1,4 +1,4 @@
-// script.js — known-good UI, crash-resistant, no public debug
+// script.js — restored charm UI, light-by-default, crash-resistant
 document.addEventListener('DOMContentLoaded', () => {
   // ---------- helpers ----------
   const bust = () => Date.now();
@@ -45,12 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   let ysTimer = null;
 
-  // ---------- preferences ----------
+  // ---------- preferences (light by default) ----------
   const prefs = JSON.parse(localStorage.getItem('prefs')||'{}');
-  if (typeof prefs.darkMode==='undefined'){
-    const mq=window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-    prefs.darkMode = mq ? mq.matches : false;
-  }
+  if (typeof prefs.darkMode==='undefined'){ prefs.darkMode = false; } // force light default
   document.body.classList.toggle('dark', !!prefs.darkMode);
   if (chkDark) chkDark.checked = !!prefs.darkMode;
   if (selColor)  selColor.value  = prefs.lineColor || 'auto';
@@ -85,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let SERIES = [];
   let EVENTS = {};
   let SUMS   = {};
-  let LAST_STATUS_ISO = null; // <— single declaration (fixes duplicate let issue)
+  let LAST_STATUS_ISO = null;
 
   // ---------- helpers ----------
   function computeRange(years){
@@ -132,35 +129,46 @@ document.addEventListener('DOMContentLoaded', () => {
       xaxis:{title:'Year', showgrid:true, gridcolor:cssVar('--grid'), range:xr},
       yaxis:{title:'GTI Index (Unbounded)', showgrid:true, gridcolor:cssVar('--grid')},
       annotations,
-      paper_bgcolor:cssVar('--bg'), plot_bgcolor:cssVar('--card'), font:{color:cssVar('--fg')}
+      paper_bgcolor:cssVar('--card'), plot_bgcolor:cssVar('--card'), font:{color:cssVar('--fg')}
     }, {displayModeBar:false, responsive:true}).then(gd=>{
-      // hover: set quick info text
       gd.on('plotly_hover', ev=>{
         const year=ev?.points?.[0]?.x; if(!year) return;
         const hover=EVENTS[String(year)];
-        if(hover && ys.hover){
-          ys.year && (ys.year.textContent=String(year));
-          ys.hover.textContent=hover;
-        }
+        const yHover = document.getElementById('ys-hover');
+        const yYear  = document.getElementById('ys-year');
+        if(hover && yHover && yYear){ yYear.textContent=String(year); yHover.textContent=hover; }
       });
-      // click: show popup summary (auto-hide)
       gd.on('plotly_click', ev=>{
         const year=ev?.points?.[0]?.x; if(!year) return;
         let gtiVal='—';
         for (let i=0;i<SERIES.length;i++){
           if(SERIES[i].year===year){ const n=SERIES[i].gti; gtiVal=(typeof n==='number')?Math.round(n):'—'; break; }
         }
-        ys.year && (ys.year.textContent=String(year));
-        ys.gti  && (ys.gti.textContent=gtiVal);
-        ys.hover&& (ys.hover.textContent=EVENTS[String(year)]||'—');
-        ys.ai   && (ys.ai.textContent=SUMS[String(year)]||'Summary coming soon.');
-        if(ys.panel){ ys.panel.style.display='block'; if(ysTimer) clearTimeout(ysTimer); ysTimer=setTimeout(()=>{ys.panel.style.display='none';}, 10000); }
+        const panel=document.getElementById('year-summary');
+        const yYear=document.getElementById('ys-year');
+        const yGTI =document.getElementById('ys-gti');
+        const yHover=document.getElementById('ys-hover');
+        const yAI  =document.getElementById('ys-ai');
+        if(yYear) yYear.textContent=String(year);
+        if(yGTI)  yGTI.textContent=gtiVal;
+        if(yHover) yHover.textContent = (EVENTS[String(year)]||'—');
+        if(yAI)    yAI.textContent = (SUMS[String(year)]||'Summary coming soon.');
+        if(panel){
+          panel.style.display='block';
+          if(ysTimer) clearTimeout(ysTimer);
+          ysTimer = setTimeout(()=>{ panel.style.display='none'; }, 10000);
+        }
       });
     }).catch(()=>{});
   }
 
-  ys.close?.addEventListener('click', ()=>{ if(ys.panel) ys.panel.style.display='none'; if(ysTimer) clearTimeout(ysTimer); });
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && ys.panel && ys.panel.style.display!=='none'){ ys.panel.style.display='none'; if(ysTimer) clearTimeout(ysTimer);} });
+  // Close popover
+  document.getElementById('ys-close')?.addEventListener('click', ()=>{
+    const panel=document.getElementById('year-summary');
+    if(panel) panel.style.display='none';
+    if(ysTimer) clearTimeout(ysTimer);
+  });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ const panel=document.getElementById('year-summary'); if(panel&&panel.style.display!=='none'){ panel.style.display='none'; if(ysTimer) clearTimeout(ysTimer); }}});
 
   function renderSignals(status){
     if(!status) return;
@@ -203,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(barsEl){
       Plotly.newPlot('category-bars',[{x:rows.map(r=>r.score),y:rows.map(r=>r.name),type:'bar',orientation:'h',hovertemplate:'%{y}: %{x}<extra></extra>'}],{
         margin:{l:170,r:20,t:10,b:30}, xaxis:{range:[0,100], showgrid:true, gridcolor:cssVar('--grid')},
-        paper_bgcolor:cssVar('--bg'), plot_bgcolor:cssVar('--card'), font:{color:cssVar('--fg')}
+        paper_bgcolor:cssVar('--card'), plot_bgcolor:cssVar('--card'), font:{color:cssVar('--fg')}
       },{displayModeBar:false,responsive:true}).catch(()=>{});
     }
     const tbl=document.getElementById('category-table');
